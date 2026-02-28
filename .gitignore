@@ -1,0 +1,79 @@
+﻿############################
+# Build Results
+############################
+bin/
+obj/
+out/
+
+############################
+# Visual Studio
+############################
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+############################
+# Rider / VS Code
+############################
+.idea/
+.vscode/
+
+############################
+# Logs
+############################
+*.log
+logs/
+LogFiles/
+
+############################
+# OS Files
+############################
+.DS_Store
+Thumbs.db
+
+############################
+# ASP.NET Core
+############################
+appsettings.Development.json
+appsettings.*.local.json
+
+############################
+# Publish
+############################
+publish/
+*.publishsettings
+
+############################
+# IIS / Express
+############################
+*.dbmdl
+*.jfm
+*.pfx
+
+############################
+# Entity Framework
+############################
+*.db
+*.mdf
+*.ldf
+
+############################
+# Secrets
+############################
+secrets.json
+.env
+
+############################
+# Node (if using React/Angular frontend)
+############################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+############################
+# Docker
+############################
+docker-compose.override.yml

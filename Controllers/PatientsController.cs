@@ -32,7 +32,6 @@ namespace HospitalApi.Controllers
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Get(int id)
         {
-            // this is the patient get api call
             var patient = await _service.GetByIdAsync(id);
             if (patient == null) return NotFound();
 

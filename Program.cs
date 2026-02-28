@@ -1,10 +1,13 @@
 using AutoMapper;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using HospitalApi.Data;
 using HospitalApi.Mapping;
 using HospitalApi.Middlewares;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using System.Text;
 
 namespace HospitalApi
@@ -15,9 +18,22 @@ namespace HospitalApi
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Configure Serilog
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Configuration)
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
+                .CreateLogger();
+
+            builder.Host.UseSerilog();
+
             // Add services to the container.
 
             builder.Services.AddControllers();
+
+            builder.Services.AddFluentValidationAutoValidation();
+            builder.Services.AddValidatorsFromAssemblyContaining<Program>();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();

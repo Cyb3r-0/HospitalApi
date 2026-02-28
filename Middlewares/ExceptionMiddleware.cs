@@ -9,8 +9,7 @@ namespace HospitalApi.Middlewares
         private readonly RequestDelegate _next;
         private readonly ILogger<ExceptionMiddleware> _logger;
 
-        public ExceptionMiddleware(RequestDelegate next, 
-            ILogger<ExceptionMiddleware> logger)
+        public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
         {
             _next = next;
             _logger = logger;
@@ -24,14 +23,24 @@ namespace HospitalApi.Middlewares
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
-                await HandleExceptionAsync(context, ex);
+                _logger.LogError(ex, "Unhandled Exception");
+
+                context.Response.StatusCode = 500;
+                context.Response.ContentType = "application/json";
+
+                var response = new
+                {
+                    success = false,
+                    message = "Something went wrong."
+                };
+
+                await context.Response.WriteAsJsonAsync(response);
             }
         }
 
         private static Task HandleExceptionAsync(HttpContext context, Exception ex)
         {
-            Console.WriteLine(PasswordHasher.Hash("Admin@123"));
+            //Admin@123
             context.Response.ContentType = "application/json";
             int statusCodes = ex switch
             {

@@ -8,13 +8,9 @@ namespace HospitalApi.Mapping
     {
         public PatientProfile()
         {
+            CreateMap<PatientCreateDto, Patient>();
             CreateMap<Patient, PatientDto>();
-
-            CreateMap<PatientCreateDto, Patient>()
-                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
-
-            CreateMap<PatientUpdateDto, Patient>()
-                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
+            CreateMap<PatientUpdateDto, Patient>();
         }
     }
 }

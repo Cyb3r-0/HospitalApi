@@ -10,4 +10,10 @@ public static class PasswordHasher
         var hash = sha.ComputeHash(bytes);
         return Convert.ToBase64String(hash);
     }
+
+    public static bool Verify(string password, string storedHash)
+    {
+        string newHash = Hash(password);
+        return newHash == storedHash;
+    }
 }

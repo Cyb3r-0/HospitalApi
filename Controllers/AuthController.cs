@@ -27,6 +27,7 @@ namespace HospitalApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequestDto request)
         {
+            // below is for hash the password...
             // conflict occure here 
             // be prepare
             var hashedPassword = PasswordHasher.Hash(request.Password);

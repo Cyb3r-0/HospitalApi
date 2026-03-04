@@ -1,10 +1,8 @@
-﻿using AutoMapper;
-using HospitalApi.Data;
-using HospitalApi.Dtos;
-using HospitalApi.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using HospitalApi.Dtos;
+using HospitalApi.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace HospitalApi.Controllers
 {
@@ -20,39 +18,59 @@ namespace HospitalApi.Controllers
             _service = service;
         }
 
-        // GET api/patients
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] PatientQueryDto query)
         {
             var result = await _service.GetAllAsync(query);
-            return Ok(result);
+
+            return Ok(new ApiResponse<object>
+            {
+                Success = true,
+                Message = "Patients fetched successfully",
+                Data = result
+            });
         }
 
-        // GET api/patients/{id}
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Get(int id)
         {
-            // this is the patient get api call
             var patient = await _service.GetByIdAsync(id);
-            if (patient == null) return NotFound();
+            if (patient == null)
+                return NotFound();
 
-            return Ok(patient);
+            return Ok(new ApiResponse<PatientDto>
+            {
+                Success = true,
+                Message = "Patient fetched successfully",
+                Data = patient
+            });
         }
 
-        // POST api/patients
         [HttpPost]
         public async Task<IActionResult> Create(PatientCreateDto dto)
         {
-            var patient = await _service.CreateAsync(dto);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userIdClaim == null)
+                return Unauthorized();
 
-            return CreatedAtAction(nameof(Get), new {id = patient.Id}, patient);
+            int userId = int.Parse(userIdClaim);
+
+            var patient = await _service.CreateAsync(dto, userId);
+
+            return CreatedAtAction(nameof(Get), new { id = patient.Id },
+                new ApiResponse<PatientDto>
+                {
+                    Success = true,
+                    Message = "Patient created successfully",
+                    Data = patient
+                });
         }
 
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, PatientUpdateDto dto)
         {
             var updated = await _service.UpdateAsync(id, dto);
-            if (!updated) NotFound();
+            if (!updated) return NotFound();
 
             return NoContent(); //204
         }

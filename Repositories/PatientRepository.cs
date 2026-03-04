@@ -12,10 +12,13 @@ public class PatientRepository : IPatientRepository
 
     public async Task<List<Patient>> GetAllAsync(int page, int pageSize, string? disease)
     {
+        page = page <= 0 ? 1 : page;
+        pageSize = pageSize <= 0 ? 10 : pageSize;
+
         var query = _db.Patients.AsNoTracking();
 
         if (!string.IsNullOrEmpty(disease))
-            query = query.Where(p => p.Disease!.Contains(disease));
+            query = query.Where(p => p.Disease != null && p.Disease.Contains(disease));
 
         return await query
             .OrderBy(p => p.Id)
@@ -29,7 +32,7 @@ public class PatientRepository : IPatientRepository
         var query = _db.Patients.AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(disease))
-            query = query.Where(p => p.Disease!.Contains(disease));
+            query = query.Where(p => p.Disease != null && p.Disease.Contains(disease));
 
         return await query.CountAsync();
     }
@@ -40,8 +43,8 @@ public class PatientRepository : IPatientRepository
     public async Task AddAsync(Patient patient)
         => await _db.Patients.AddAsync(patient);
 
-    public async Task DeleteAsync(Patient patient)
-        => _db.Patients.Remove(patient);
+    public void Delete(Patient patient)
+            => _db.Patients.Remove(patient);
 
     public async Task SaveChangesAsync()
         => await _db.SaveChangesAsync();

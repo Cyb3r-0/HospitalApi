@@ -15,5 +15,6 @@
         public DateTime CreatedAt { get; set; }
 
         public ICollection<Patient> CreatedPatients { get; set; } = new List<Patient>();
+        public ICollection<Doctor> CreatedDoctors { get; set; } = new List<Doctor>();
     }
 }

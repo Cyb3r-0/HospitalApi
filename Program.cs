@@ -76,6 +76,8 @@ namespace HospitalApi
             builder.Services.AddAutoMapper(typeof(PatientProfile).Assembly);
             builder.Services.AddScoped<IPatientRepository, PatientRepository>();
             builder.Services.AddScoped<IPatientService, PatientService>();
+            builder.Services.AddScoped<Repositories.IDoctorRepository, Repositories.DoctorRepository>();
+            builder.Services.AddScoped<IDoctorService, DoctorService>();
 
             builder.Services.AddCors(options =>
             {

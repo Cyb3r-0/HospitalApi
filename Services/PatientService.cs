@@ -1,74 +1,139 @@
-﻿using AutoMapper;
+﻿using System.Text.Json;
+using AutoMapper;
 using HospitalApi.Dtos;
+using HospitalApi.Helpers;
 using HospitalApi.Models;
+using HospitalApi.Services;
+using Microsoft.Extensions.Caching.Distributed;
 
-public class PatientService : IPatientService
+namespace HospitalApi.Services
 {
-    private readonly IPatientRepository _repo;
-    private readonly IMapper _mapper;
-
-    public PatientService(IPatientRepository repo, IMapper mapper)
+    public class PatientService : IPatientService
     {
-        _repo = repo;
-        _mapper = mapper;
-    }
+        private const int CacheDurationMinutes = 5;
+        private readonly IPatientRepository _repo;
+        private readonly IMapper _mapper;
+        private readonly IDistributedCache _cache;
 
-    public async Task<object> GetAllAsync(PatientQueryDto query)
-    {
-        query.Page = query.Page <= 0 ? 1 : query.Page;
-        query.PageSize = query.PageSize <= 0 ? 100 : query.PageSize;
-
-        var totalCount = await _repo.GetCountAsync(query.Disease);
-
-        var patients = await _repo.GetAllAsync(query.Page, query.PageSize, query.Disease);
-
-        var data = _mapper.Map<List<PatientDto>>(patients);
-
-        return new
+        public PatientService(IPatientRepository repo, IMapper mapper, IDistributedCache cache)
         {
-            TotalCount = totalCount,
-            Page = query.Page,
-            PageSize = query.PageSize,
-            TotalPage = (int)Math.Ceiling(totalCount / (double)query.PageSize),
-            Data = data
-        };
-    }
+            _repo = repo;
+            _mapper = mapper;
+            _cache = cache;
+        }
 
-    public async Task<PatientDto?> GetByIdAsync(int id)
-    {
-        var patient = await _repo.GetByIdAsync(id);
-        return patient == null ? null : _mapper.Map<PatientDto>(patient);
-    }
+        public async Task<PagedResult<PatientDto>> GetAllAsync(PatientQueryDto query)
+        {
+            if (query.Page <= 0) query.Page = 1;
+            if (query.PageSize <= 0) query.PageSize = 10;
 
-    public async Task<PatientDto> CreateAsync(PatientCreateDto dto)
-    {
-        var patient = _mapper.Map<Patient>(dto);
+            var diseaseKey = string.IsNullOrWhiteSpace(query.Disease) ? "all" : query.Disease;
+            var cacheKey = $"patients_page{query.Page}_size{query.PageSize}_disease_{diseaseKey}";
+            var cachedData = await _cache.GetStringAsync(cacheKey);
 
-        await _repo.AddAsync(patient);
-        await _repo.SaveChangesAsync();
+            if (!string.IsNullOrEmpty(cachedData))
+            {
+                try
+                {
+                    return JsonSerializer.Deserialize<PagedResult<PatientDto>>(cachedData)!;
+                }
+                catch
+                {
+                    await _cache.RemoveAsync(cacheKey);
+                }
+            }
 
-        return _mapper.Map<PatientDto>(patient);
-    }
+            var totalCount = await _repo.GetCountAsync(query.Disease);
+            var patients = await _repo.GetAllAsync(query.Page, query.PageSize, query.Disease);
+            var mapped = _mapper.Map<List<PatientDto>>(patients);
 
-    public async Task<bool> UpdateAsync(int id, PatientUpdateDto dto)
-    {
-        var patient = await _repo.GetByIdAsync(id);
-        if (patient == null) return false;
+            var result = new PagedResult<PatientDto>
+            {
+                Items = mapped,
+                TotalCount = totalCount,
+                Page = query.Page,
+                PageSize = query.PageSize,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)query.PageSize)
+            };
 
-        _mapper.Map(dto, patient);
-        await _repo.SaveChangesAsync();
+            await _cache.SetStringAsync(
+                cacheKey,
+                JsonSerializer.Serialize(result),
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
+                });
 
-        return true;
-    }
+            return result;
+        }
 
-    public async Task<bool> DeleteAsync(int id)
-    {
-        var patient = await _repo.GetByIdAsync(id);
-        if (patient == null) return false;
+        public async Task<PatientDto?> GetByIdAsync(int id)
+        {
+            var cacheKey = $"patient_{id}";
+            var cacheData = await _cache.GetStringAsync(cacheKey);
 
-        await _repo.DeleteAsync(patient);
-        await _repo.SaveChangesAsync();
+            if (!string.IsNullOrEmpty(cacheData))
+            {
+                try
+                {
+                    return JsonSerializer.Deserialize<PatientDto>(cacheData);
+                }
+                catch
+                {
+                    await _cache.RemoveAsync(cacheKey);
+                }
+            }
 
-        return true;
+            var patient = await _repo.GetByIdAsync(id);
+            if (patient == null)
+                return null;
+
+            var mapped = _mapper.Map<PatientDto>(patient);
+
+            await _cache.SetStringAsync(
+                cacheKey,
+                JsonSerializer.Serialize(mapped),
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(CacheDurationMinutes)
+                });
+
+            return mapped;
+        }
+
+        public async Task<PatientDto> CreateAsync(PatientCreateDto dto, int createdByUserId)
+        {
+            var patient = _mapper.Map<Patient>(dto);
+            patient.CreatedByUserId = createdByUserId;
+
+            await _repo.AddAsync(patient);
+            await _repo.SaveChangesAsync();
+
+            return _mapper.Map<PatientDto>(patient);
+        }
+
+        public async Task<bool> UpdateAsync(int id, PatientUpdateDto dto)
+        {
+            var patient = await _repo.GetByIdAsync(id);
+            if (patient == null) return false;
+
+            _mapper.Map(dto, patient);
+            await _repo.SaveChangesAsync();
+            await _cache.RemoveAsync($"patient_{id}");
+
+            return true;
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var patient = await _repo.GetByIdAsync(id);
+            if (patient == null) return false;
+
+            _repo.Delete(patient);
+            await _repo.SaveChangesAsync();
+            await _cache.RemoveAsync($"patient_{id}");
+
+            return true;
+        }
     }
 }

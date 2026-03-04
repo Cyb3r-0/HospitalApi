@@ -25,16 +25,7 @@ namespace HospitalApi.Middlewares
             {
                 _logger.LogError(ex, "Unhandled Exception");
 
-                context.Response.StatusCode = 500;
-                context.Response.ContentType = "application/json";
-
-                var response = new
-                {
-                    success = false,
-                    message = "Something went wrong."
-                };
-
-                await context.Response.WriteAsJsonAsync(response);
+                await HandleExceptionAsync(context, ex);
             }
         }
 
@@ -54,12 +45,12 @@ namespace HospitalApi.Middlewares
             var response = new Models.Common.ApiError
             {
                 StatusCode = statusCodes,
-                Message = statusCodes == 500 
-                    ?"An unexpected error occurred."
+                Message = statusCodes == 500
+                    ? "An unexpected error occurred."
                     : ex.Message,
-            #if Debug
+#if Debug
                 Details = ex.StackTrace
-            #endif
+#endif
             };
 
             var json = JsonSerializer.Serialize(response);

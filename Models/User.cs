@@ -16,5 +16,6 @@
 
         public ICollection<Patient> CreatedPatients { get; set; } = new List<Patient>();
         public ICollection<Doctor> CreatedDoctors { get; set; } = new List<Doctor>();
+        public ICollection<Appointment> CreatedAppointments { get; set; } = new List<Appointment>();
     }
 }

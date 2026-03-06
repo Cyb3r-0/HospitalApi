@@ -4,6 +4,7 @@ using FluentValidation.AspNetCore;
 using HospitalApi.Data;
 using HospitalApi.Mapping;
 using HospitalApi.Middlewares;
+using HospitalApi.Repositories;
 using HospitalApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -78,6 +79,8 @@ namespace HospitalApi
             builder.Services.AddScoped<IPatientService, PatientService>();
             builder.Services.AddScoped<Repositories.IDoctorRepository, Repositories.DoctorRepository>();
             builder.Services.AddScoped<IDoctorService, DoctorService>();
+            builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+            builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 
             builder.Services.AddCors(options =>
             {

@@ -8,6 +8,7 @@ namespace HospitalApi.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
         public DbSet<Patient> Patients { get; set; } = null!;
         public DbSet<Doctor> Doctors { get; set; } = null!;
+        public DbSet<Appointment> Appointments { get; set; } = null!;
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
 
@@ -34,6 +35,27 @@ namespace HospitalApi.Data
                 .HasOne(d => d.CreatedByUser)
                 .WithMany(u => u.CreatedDoctors)
                 .HasForeignKey(d => d.CreatedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Appointment → Patient
+            modelBuilder.Entity<Appointment>()
+                .HasOne(a => a.Patient)
+                .WithMany()
+                .HasForeignKey(a => a.PatientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Appointment → Doctor
+            modelBuilder.Entity<Appointment>()
+                .HasOne(a => a.Doctor)
+                .WithMany()
+                .HasForeignKey(a => a.DoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Appointment → CreatedByUser
+            modelBuilder.Entity<Appointment>()
+                .HasOne(a => a.CreatedByUser)
+                .WithMany(u => u.CreatedAppointments)
+                .HasForeignKey(a => a.CreatedByUserId)
                 .OnDelete(DeleteBehavior.SetNull);
         }
     }

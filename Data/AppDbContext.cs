@@ -10,6 +10,7 @@ namespace HospitalApi.Data
         public DbSet<Doctor> Doctors { get; set; } = null!;
         public DbSet<Appointment> Appointments { get; set; } = null!;
         public DbSet<Bill> Bills { get; set; } = null!;
+        public DbSet<PaymentEvent> PaymentEvents { get; set; } = null!;
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
 
@@ -85,7 +86,7 @@ namespace HospitalApi.Data
                 .HasOne(b => b.CreatedByUser)
                 .WithMany(u => u.CreatedBills)
                 .HasForeignKey(b => b.CreatedByUserId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Bill → UpdatedByUser
             modelBuilder.Entity<Bill>()

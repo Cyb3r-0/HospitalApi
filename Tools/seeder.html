@@ -1,0 +1,892 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital API — Test Data Seeder</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #111111;
+            --border: #222222;
+            --accent: #00ff88;
+            --warn: #ffaa00;
+            --error: #ff4455;
+            --info: #00aaff;
+            --text: #e8e8e8;
+            --muted: #555;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'IBM Plex Mono', monospace;
+            min-height: 100vh;
+            padding: 40px 24px;
+        }
+
+            /* Scanline effect */
+            body::after {
+                content: '';
+                position: fixed;
+                inset: 0;
+                background: repeating-linear-gradient( 0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px );
+                pointer-events: none;
+                z-index: 999;
+            }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 40px;
+        }
+
+            .header h1 {
+                font-family: 'Bebas Neue', sans-serif;
+                font-size: 72px;
+                letter-spacing: 4px;
+                line-height: 1;
+                color: var(--accent);
+                text-shadow: 0 0 40px rgba(0,255,136,0.3);
+            }
+
+            .header p {
+                color: var(--muted);
+                font-size: 12px;
+                letter-spacing: 2px;
+                margin-top: 8px;
+            }
+
+        /* Config box */
+        .config {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent);
+            padding: 24px;
+            margin-bottom: 32px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+
+        .config-field label {
+            display: block;
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: var(--muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .config-field input {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            padding: 8px 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+            .config-field input:focus {
+                border-color: var(--accent);
+            }
+
+        /* Scenarios */
+        .scenarios {
+            display: grid;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .scenario {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 20px 24px;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .scenario:hover {
+                border-color: var(--accent);
+                background: #151515;
+            }
+
+            .scenario.running {
+                border-color: var(--warn);
+            }
+
+            .scenario.done {
+                border-color: var(--accent);
+            }
+
+            .scenario.failed {
+                border-color: var(--error);
+            }
+
+        .scenario-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        .scenario-num {
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: var(--muted);
+            min-width: 32px;
+        }
+
+        .scenario-title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            flex: 1;
+        }
+
+        .scenario-badge {
+            font-size: 9px;
+            letter-spacing: 2px;
+            padding: 3px 8px;
+            border: 1px solid;
+            text-transform: uppercase;
+        }
+
+        .badge-pending {
+            color: var(--muted);
+            border-color: var(--muted);
+        }
+
+        .badge-running {
+            color: var(--warn);
+            border-color: var(--warn);
+            animation: blink 1s infinite;
+        }
+
+        .badge-done {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .badge-failed {
+            color: var(--error);
+            border-color: var(--error);
+        }
+
+        .scenario-desc {
+            font-size: 11px;
+            color: var(--muted);
+            margin-left: 44px;
+        }
+
+        /* Progress bar */
+        .scenario-progress {
+            height: 2px;
+            background: var(--border);
+            margin-top: 12px;
+            overflow: hidden;
+        }
+
+        .scenario-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .scenario.running .scenario-progress-fill {
+            background: var(--warn);
+            animation: progress-pulse 1s infinite;
+        }
+
+        .scenario.done .scenario-progress-fill {
+            width: 100% !important;
+        }
+
+        .scenario.failed .scenario-progress-fill {
+            background: var(--error);
+        }
+
+        /* Run all button */
+        .run-btn {
+            width: 100%;
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 28px;
+            letter-spacing: 6px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 32px;
+        }
+
+            .run-btn:hover {
+                background: var(--accent);
+                color: var(--bg);
+            }
+
+            .run-btn:disabled {
+                opacity: 0.3;
+                cursor: not-allowed;
+            }
+
+        /* Terminal log */
+        .terminal {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-top: 3px solid var(--accent);
+            padding: 24px;
+            height: 400px;
+            overflow-y: auto;
+            font-size: 11px;
+            line-height: 1.8;
+        }
+
+            .terminal::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            .terminal::-webkit-scrollbar-track {
+                background: var(--bg);
+            }
+
+            .terminal::-webkit-scrollbar-thumb {
+                background: var(--border);
+            }
+
+        .log-line {
+            display: flex;
+            gap: 12px;
+        }
+
+        .log-time {
+            color: var(--muted);
+            min-width: 80px;
+            flex-shrink: 0;
+        }
+
+        .log-msg {
+            flex: 1;
+        }
+
+        .log-success {
+            color: var(--accent);
+        }
+
+        .log-error {
+            color: var(--error);
+        }
+
+        .log-warn {
+            color: var(--warn);
+        }
+
+        .log-info {
+            color: var(--info);
+        }
+
+        .log-section {
+            color: var(--accent);
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-top: 8px;
+        }
+
+        /* Stats bar */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--border);
+            margin-bottom: 32px;
+        }
+
+        .stat {
+            background: var(--surface);
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-num {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 36px;
+            line-height: 1;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 9px;
+            letter-spacing: 2px;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .stat-num.green {
+            color: var(--accent);
+        }
+
+        .stat-num.red {
+            color: var(--error);
+        }
+
+        .stat-num.yellow {
+            color: var(--warn);
+        }
+
+        .stat-num.blue {
+            color: var(--info);
+        }
+
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        @keyframes progress-pulse {
+            0% {
+                width: 20%;
+            }
+
+            50% {
+                width: 80%;
+            }
+
+            100% {
+                width: 20%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <div class="header">
+            <h1>API SEEDER</h1>
+            <p>// HOSPITAL API — TEST DATA GENERATOR & SCENARIO RUNNER</p>
+        </div>
+
+        <!-- Config -->
+        <div class="config">
+            <div class="config-field">
+                <label>API Base URL</label>
+                <input type="text" id="baseUrl" value="http://localhost:5177">
+            </div>
+            <div class="config-field">
+                <label>Username</label>
+                <input type="text" id="username" value="Tarun Paul">
+            </div>
+            <div class="config-field">
+                <label>Password</label>
+                <input type="password" id="password" value="">
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat"><span class="stat-num green" id="stat-passed">0</span><div class="stat-label">Passed</div></div>
+            <div class="stat"><span class="stat-num red" id="stat-failed">0</span><div class="stat-label">Failed</div></div>
+            <div class="stat"><span class="stat-num blue" id="stat-requests">0</span><div class="stat-label">Requests</div></div>
+            <div class="stat"><span class="stat-num yellow" id="stat-time">0ms</span><div class="stat-label">Total Time</div></div>
+        </div>
+
+        <!-- Run button -->
+        <button class="run-btn" id="runBtn" onclick="runAll()">▶ RUN ALL SCENARIOS</button>
+
+        <!-- Scenarios -->
+        <div class="scenarios" id="scenarios">
+
+            <div class="scenario" id="s1">
+                <div class="scenario-header">
+                    <span class="scenario-num">01</span>
+                    <span class="scenario-title">LOGIN & GET TOKEN</span>
+                    <span class="scenario-badge badge-pending" id="s1-badge">PENDING</span>
+                </div>
+                <div class="scenario-desc">Authenticate and retrieve JWT token for all subsequent requests</div>
+                <div class="scenario-progress"><div class="scenario-progress-fill" id="s1-progress"></div></div>
+            </div>
+
+            <div class="scenario" id="s2">
+                <div class="scenario-header">
+                    <span class="scenario-num">02</span>
+                    <span class="scenario-title">CREATE 3 DOCTORS</span>
+                    <span class="scenario-badge badge-pending" id="s2-badge">PENDING</span>
+                </div>
+                <div class="scenario-desc">Cardiologist · Neurologist · Orthopedic — different specializations</div>
+                <div class="scenario-progress"><div class="scenario-progress-fill" id="s2-progress"></div></div>
+            </div>
+
+            <div class="scenario" id="s3">
+                <div class="scenario-header">
+                    <span class="scenario-num">03</span>
+                    <span class="scenario-title">CREATE 5 PATIENTS</span>
+                    <span class="scenario-badge badge-pending" id="s3-badge">PENDING</span>
+                </div>
+                <div class="scenario-desc">Different ages · diseases · assigned to various doctors</div>
+                <div class="scenario-progress"><div class="scenario-progress-fill" id="s3-progress"></div></div>
+            </div>
+
+            <div class="scenario" id="s4">
+                <div class="scenario-header">
+                    <span class="scenario-num">04</span>
+                    <span class="scenario-title">BOOK 5 APPOINTMENTS</span>
+                    <span class="scenario-badge badge-pending" id="s4-badge">PENDING</span>
+                </div>
+                <div class="scenario-desc">Each patient gets an appointment with a doctor at different dates</div>
+                <div class="scenario-progress"><div class="scenario-progress-fill" id="s4-progress"></div></div>
+            </div>
+
+            <div class="scenario" id="s5">
+                <div class="scenario-header">
+                    <span class="scenario-num">05</span>
+                    <span class="scenario-title">GENERATE 5 BILLS</span>
+                    <span class="scenario-badge badge-pending" id="s5-badge">PENDING</span>
+                </div>
+                <div class="scenario-desc">One bill per appointment · varying fees · discounts · taxes</div>
+                <div class="scenario-progress"><div class="scenario-progress-fill" id="s5-progress"></div></div>
+            </div>
+
+            <div class="scenario" id="s6">
+                <div class="scenario-header">
+                    <span class="scenario-num">06</span>
+                    <span class="scenario-title">FULL PAYMENT — CASH</span>
+                    <span class="scenario-badge badge-pending" id="s6-badge">PENDING</span>
+                </div>
+                <div class="scenario-desc">Bill #1 paid in full via cash in single payment</div>
+                <div class="scenario-progress"><div class="scenario-progress-fill" id="s6-progress"></div></div>
+            </div>
+
+            <div class="scenario" id="s7">
+                <div class="scenario-header">
+                    <span class="scenario-num">07</span>
+                    <span class="scenario-title">PARTIAL → FULL PAYMENT — CARD</span>
+                    <span class="scenario-badge badge-pending" id="s7-badge">PENDING</span>
+                </div>
+                <div class="scenario-desc">Bill #2 → partial payment first, then remaining balance via card</div>
+                <div class="scenario-progress"><div class="scenario-progress-fill" id="s7-progress"></div></div>
+            </div>
+
+            <div class="scenario" id="s8">
+                <div class="scenario-header">
+                    <span class="scenario-num">08</span>
+                    <span class="scenario-title">INSURANCE PAYMENT</span>
+                    <span class="scenario-badge badge-pending" id="s8-badge">PENDING</span>
+                </div>
+                <div class="scenario-desc">Bill #3 paid via insurance with transaction reference</div>
+                <div class="scenario-progress"><div class="scenario-progress-fill" id="s8-progress"></div></div>
+            </div>
+
+            <div class="scenario" id="s9">
+                <div class="scenario-header">
+                    <span class="scenario-num">09</span>
+                    <span class="scenario-title">3-INSTALLMENT PAYMENT</span>
+                    <span class="scenario-badge badge-pending" id="s9-badge">PENDING</span>
+                </div>
+                <div class="scenario-desc">Bill #4 paid in 3 separate bank transfers — tests Kafka event stream</div>
+                <div class="scenario-progress"><div class="scenario-progress-fill" id="s9-progress"></div></div>
+            </div>
+
+            <div class="scenario" id="s10">
+                <div class="scenario-header">
+                    <span class="scenario-num">10</span>
+                    <span class="scenario-title">VERIFY KAFKA EVENT STREAM</span>
+                    <span class="scenario-badge badge-pending" id="s10-badge">PENDING</span>
+                </div>
+                <div class="scenario-desc">Fetch payment-events for all bills · verify all events captured</div>
+                <div class="scenario-progress"><div class="scenario-progress-fill" id="s10-progress"></div></div>
+            </div>
+
+        </div>
+
+        <!-- Terminal -->
+        <div class="terminal" id="terminal">
+            <div class="log-line"><span class="log-time">--:--:--</span><span class="log-msg log-muted">// Waiting for run command...</span></div>
+        </div>
+
+    </div>
+
+    <script>
+  let token = '';
+  let doctors = [];
+  let patients = [];
+  let appointments = [];
+  let bills = [];
+  let passed = 0, failed = 0, totalRequests = 0;
+  const startTime = Date.now();
+
+  function getBase() { return document.getElementById('baseUrl').value.replace(/\/$/, ''); }
+
+  function log(msg, type = 'info') {
+    const t = document.getElementById('terminal');
+    const now = new Date().toTimeString().slice(0,8);
+    const div = document.createElement('div');
+    div.className = 'log-line';
+    div.innerHTML = `<span class="log-time">${now}</span><span class="log-msg log-${type}">${msg}</span>`;
+    t.appendChild(div);
+    t.scrollTop = t.scrollHeight;
+  }
+
+  function logSection(title) {
+    const t = document.getElementById('terminal');
+    const div = document.createElement('div');
+    div.className = 'log-line';
+    div.innerHTML = `<span class="log-time"></span><span class="log-msg log-section">━━ ${title} ━━</span>`;
+    t.appendChild(div);
+  }
+
+  function setScenario(id, state, progress = 0) {
+    const el = document.getElementById(`s${id}`);
+    const badge = document.getElementById(`s${id}-badge`);
+    const prog = document.getElementById(`s${id}-progress`);
+    el.className = `scenario ${state}`;
+    badge.className = `scenario-badge badge-${state}`;
+    badge.textContent = state.toUpperCase();
+    prog.style.width = progress + '%';
+  }
+
+  function updateStats() {
+    document.getElementById('stat-passed').textContent = passed;
+    document.getElementById('stat-failed').textContent = failed;
+    document.getElementById('stat-requests').textContent = totalRequests;
+    document.getElementById('stat-time').textContent = (Date.now() - startTime) + 'ms';
+  }
+
+  async function api(method, path, body = null, authRequired = true) {
+    totalRequests++;
+    updateStats();
+    const headers = { 'Content-Type': 'application/json' };
+    if (authRequired && token) headers['Authorization'] = `Bearer ${token}`;
+    try {
+      const res = await fetch(getBase() + path, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : null
+      });
+      const data = await res.json();
+      return { ok: res.ok, status: res.status, data };
+    } catch (e) {
+      return { ok: false, status: 0, data: { message: e.message } };
+    }
+  }
+
+  async function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  async function runAll() {
+    document.getElementById('runBtn').disabled = true;
+    document.getElementById('terminal').innerHTML = '';
+    passed = 0; failed = 0; totalRequests = 0;
+    doctors = []; patients = []; appointments = []; bills = [];
+
+    // ── S1: Login ──────────────────────────────────────────
+    logSection('SCENARIO 01 — LOGIN');
+    setScenario(1, 'running', 40);
+    const loginRes = await api('POST', '/api/auth/login', {
+      username: document.getElementById('username').value,
+      password: document.getElementById('password').value
+    }, false);
+
+    if (!loginRes.ok || !loginRes.data.token) {
+      log(`✗ Login failed: ${loginRes.data.message || 'Check credentials'}`, 'error');
+      setScenario(1, 'failed', 100); failed++;
+      document.getElementById('runBtn').disabled = false;
+      return;
+    }
+    token = loginRes.data.token;
+    log(`✓ Logged in — token received`, 'success');
+    setScenario(1, 'done'); passed++;
+    updateStats();
+    await delay(300);
+
+    // ── S2: Create Doctors ─────────────────────────────────
+    logSection('SCENARIO 02 — CREATE DOCTORS');
+    setScenario(2, 'running', 20);
+    const doctorData = [
+      { name: 'Dr. Aisha Patel',    specialization: 'Cardiology',    phone: '+91-9811001001', email: 'aisha.patel@hospital.com',    isAvailable: true },
+      { name: 'Dr. Rahul Mehta',    specialization: 'Neurology',      phone: '+91-9811002002', email: 'rahul.mehta@hospital.com',    isAvailable: true },
+      { name: 'Dr. Priya Sharma',   specialization: 'Orthopedics',    phone: '+91-9811003003', email: 'priya.sharma@hospital.com',   isAvailable: true },
+    ];
+
+    for (let i = 0; i < doctorData.length; i++) {
+      const r = await api('POST', '/api/doctors', doctorData[i]);
+      if (r.ok && r.data.data) {
+        doctors.push(r.data.data);
+        log(`✓ Created doctor: ${doctorData[i].name} (ID: ${r.data.data.id})`, 'success');
+      } else {
+        log(`✗ Failed to create ${doctorData[i].name}: ${r.data.message}`, 'error');
+      }
+      setScenario(2, 'running', ((i+1)/doctorData.length)*90);
+      await delay(200);
+    }
+    setScenario(2, doctors.length === 3 ? 'done' : 'failed');
+    doctors.length === 3 ? passed++ : failed++;
+    updateStats();
+    await delay(300);
+
+    // ── S3: Create Patients ────────────────────────────────
+    logSection('SCENARIO 03 — CREATE PATIENTS');
+    setScenario(3, 'running', 20);
+    const patientData = [
+      { name: 'Arjun Singh',    age: 45, disease: 'Hypertension' },
+      { name: 'Meera Kapoor',   age: 32, disease: 'Migraine' },
+      { name: 'Vikram Nair',    age: 58, disease: 'Knee Pain' },
+      { name: 'Sunita Rao',     age: 27, disease: 'Chest Pain' },
+      { name: 'Deepak Joshi',   age: 41, disease: 'Back Pain' },
+    ];
+
+    for (let i = 0; i < patientData.length; i++) {
+      const r = await api('POST', '/api/patients', patientData[i]);
+      if (r.ok && r.data.data) {
+        patients.push(r.data.data);
+        log(`✓ Created patient: ${patientData[i].name} (ID: ${r.data.data.id})`, 'success');
+      } else {
+        log(`✗ Failed: ${patientData[i].name}: ${r.data.message}`, 'error');
+      }
+      setScenario(3, 'running', ((i+1)/patientData.length)*90);
+      await delay(200);
+    }
+    setScenario(3, patients.length === 5 ? 'done' : 'failed');
+    patients.length === 5 ? passed++ : failed++;
+    updateStats();
+    await delay(300);
+
+    // ── S4: Book Appointments ──────────────────────────────
+    logSection('SCENARIO 04 — BOOK APPOINTMENTS');
+    setScenario(4, 'running', 20);
+
+    if (doctors.length < 3 || patients.length < 5) {
+      log('✗ Skipping — not enough doctors/patients created', 'warn');
+      setScenario(4, 'failed'); failed++;
+    } else {
+      const apptData = [
+        { patientId: patients[0].id, doctorId: doctors[0].id, appointmentDate: '2026-05-01T10:00:00', notes: 'Routine cardiac checkup' },
+        { patientId: patients[1].id, doctorId: doctors[1].id, appointmentDate: '2026-05-02T11:00:00', notes: 'Migraine consultation' },
+        { patientId: patients[2].id, doctorId: doctors[2].id, appointmentDate: '2026-05-03T09:30:00', notes: 'Knee replacement evaluation' },
+        { patientId: patients[3].id, doctorId: doctors[0].id, appointmentDate: '2026-05-04T14:00:00', notes: 'Chest pain investigation' },
+        { patientId: patients[4].id, doctorId: doctors[2].id, appointmentDate: '2026-05-05T15:30:00', notes: 'Lower back pain treatment' },
+      ];
+
+      for (let i = 0; i < apptData.length; i++) {
+        const r = await api('POST', '/api/appointments', apptData[i]);
+        if (r.ok && r.data.data) {
+          appointments.push(r.data.data);
+          log(`✓ Appointment: ${r.data.data.patientName} → Dr. ${r.data.data.doctorName} (ID: ${r.data.data.id})`, 'success');
+        } else {
+          log(`✗ Failed appointment ${i+1}: ${r.data.message}`, 'error');
+        }
+        setScenario(4, 'running', ((i+1)/apptData.length)*90);
+        await delay(200);
+      }
+      setScenario(4, appointments.length === 5 ? 'done' : 'failed');
+      appointments.length === 5 ? passed++ : failed++;
+    }
+    updateStats();
+    await delay(300);
+
+    // ── S5: Generate Bills ─────────────────────────────────
+    logSection('SCENARIO 05 — GENERATE BILLS');
+    setScenario(5, 'running', 20);
+
+    if (appointments.length < 5) {
+      log('✗ Skipping — not enough appointments', 'warn');
+      setScenario(5, 'failed'); failed++;
+    } else {
+      const billData = [
+        { appointmentId: appointments[0].id, consultationFee: 800,  medicineFee: 200, otherCharges: 100, discount: 50,  taxAmount: 81.5,  dueDate: '2026-05-15T00:00:00', notes: 'Cardiac consultation' },
+        { appointmentId: appointments[1].id, consultationFee: 600,  medicineFee: 150, otherCharges: 50,  discount: 0,   taxAmount: 56,    dueDate: '2026-05-16T00:00:00', notes: 'Neurology consultation' },
+        { appointmentId: appointments[2].id, consultationFee: 1200, medicineFee: 0,   otherCharges: 500, discount: 100, taxAmount: 128,   dueDate: '2026-05-17T00:00:00', notes: 'Orthopedic evaluation + X-Ray' },
+        { appointmentId: appointments[3].id, consultationFee: 800,  medicineFee: 300, otherCharges: 200, discount: 0,   taxAmount: 104,   dueDate: '2026-05-18T00:00:00', notes: 'Cardiac + ECG' },
+        { appointmentId: appointments[4].id, consultationFee: 500,  medicineFee: 400, otherCharges: 0,   discount: 50,  taxAmount: 51,    dueDate: '2026-05-19T00:00:00', notes: 'Physiotherapy session' },
+      ];
+
+      for (let i = 0; i < billData.length; i++) {
+        const r = await api('POST', '/api/bills', billData[i]);
+        if (r.ok && r.data.data) {
+          bills.push(r.data.data);
+          log(`✓ Bill ${r.data.data.invoiceNumber} — Total: ₹${r.data.data.totalAmount} (ID: ${r.data.data.id})`, 'success');
+        } else {
+          log(`✗ Failed bill ${i+1}: ${r.data.message}`, 'error');
+        }
+        setScenario(5, 'running', ((i+1)/billData.length)*90);
+        await delay(200);
+      }
+      setScenario(5, bills.length === 5 ? 'done' : 'failed');
+      bills.length === 5 ? passed++ : failed++;
+    }
+    updateStats();
+    await delay(300);
+
+    if (bills.length < 4) {
+      log('✗ Not enough bills to run payment scenarios', 'error');
+      document.getElementById('runBtn').disabled = false;
+      return;
+    }
+
+    // ── S6: Full Cash Payment ──────────────────────────────
+    logSection('SCENARIO 06 — FULL CASH PAYMENT');
+    setScenario(6, 'running', 50);
+    const s6 = await api('POST', `/api/bills/${bills[0].id}/pay`, {
+      paidAmount: bills[0].totalAmount,
+      paymentMethod: 1,
+      transactionReference: 'CASH-001'
+    });
+    if (s6.ok && s6.data.data?.paymentStatus === 2) {
+      log(`✓ Bill #${bills[0].id} fully paid — Status: Paid ✓`, 'success');
+      log(`  Amount: ₹${bills[0].totalAmount} | Method: Cash | Ref: CASH-001`, 'info');
+      setScenario(6, 'done'); passed++;
+    } else {
+      log(`✗ Cash payment failed: ${s6.data.message}`, 'error');
+      setScenario(6, 'failed'); failed++;
+    }
+    updateStats();
+    await delay(300);
+
+    // ── S7: Partial → Full Card Payment ───────────────────
+    logSection('SCENARIO 07 — PARTIAL → FULL CARD PAYMENT');
+    setScenario(7, 'running', 30);
+    const halfAmount = Math.floor(bills[1].totalAmount / 2);
+    const s7a = await api('POST', `/api/bills/${bills[1].id}/pay`, {
+      paidAmount: halfAmount,
+      paymentMethod: 2,
+      transactionReference: 'CARD-001-PARTIAL'
+    });
+    if (s7a.ok) {
+      log(`✓ Partial payment: ₹${halfAmount} — Status: PartiallyPaid`, 'success');
+    } else {
+      log(`✗ Partial payment failed: ${s7a.data.message}`, 'error');
+    }
+    setScenario(7, 'running', 70);
+    await delay(500);
+
+    const remaining = bills[1].totalAmount - halfAmount;
+    const s7b = await api('POST', `/api/bills/${bills[1].id}/pay`, {
+      paidAmount: remaining,
+      paymentMethod: 2,
+      transactionReference: 'CARD-002-FINAL'
+    });
+    if (s7b.ok && s7b.data.data?.paymentStatus === 2) {
+      log(`✓ Final payment: ₹${remaining} — Status: Paid ✓`, 'success');
+      log(`  Total paid in 2 card transactions`, 'info');
+      setScenario(7, 'done'); passed++;
+    } else {
+      log(`✗ Final card payment failed`, 'error');
+      setScenario(7, 'failed'); failed++;
+    }
+    updateStats();
+    await delay(300);
+
+    // ── S8: Insurance Payment ──────────────────────────────
+    logSection('SCENARIO 08 — INSURANCE PAYMENT');
+    setScenario(8, 'running', 50);
+    const s8 = await api('POST', `/api/bills/${bills[2].id}/pay`, {
+      paidAmount: bills[2].totalAmount,
+      paymentMethod: 4,
+      transactionReference: 'INS-HDFC-2026-887'
+    });
+    if (s8.ok && s8.data.data?.paymentStatus === 2) {
+      log(`✓ Insurance payment complete — Ref: INS-HDFC-2026-887`, 'success');
+      log(`  Amount: ₹${bills[2].totalAmount} covered by insurance`, 'info');
+      setScenario(8, 'done'); passed++;
+    } else {
+      log(`✗ Insurance payment failed: ${s8.data.message}`, 'error');
+      setScenario(8, 'failed'); failed++;
+    }
+    updateStats();
+    await delay(300);
+
+    // ── S9: 3-Installment Bank Transfer ───────────────────
+    logSection('SCENARIO 09 — 3-INSTALLMENT BANK TRANSFER');
+    setScenario(9, 'running', 15);
+    const installment = Math.floor(bills[3].totalAmount / 3);
+    const installments = [
+      { amt: installment, ref: 'NEFT-2026-001' },
+      { amt: installment, ref: 'NEFT-2026-002' },
+      { amt: bills[3].totalAmount - (installment * 2), ref: 'NEFT-2026-003' }
+    ];
+
+    let installmentOk = true;
+    for (let i = 0; i < installments.length; i++) {
+      const r = await api('POST', `/api/bills/${bills[3].id}/pay`, {
+        paidAmount: installments[i].amt,
+        paymentMethod: 3,
+        transactionReference: installments[i].ref
+      });
+      if (r.ok) {
+        log(`✓ Installment ${i+1}/3: ₹${installments[i].amt} — Ref: ${installments[i].ref}`, 'success');
+      } else {
+        log(`✗ Installment ${i+1} failed: ${r.data.message}`, 'error');
+        installmentOk = false;
+      }
+      setScenario(9, 'running', ((i+1)/3)*90);
+      await delay(400);
+    }
+    setScenario(9, installmentOk ? 'done' : 'failed');
+    installmentOk ? passed++ : failed++;
+    updateStats();
+    await delay(500);
+
+    // ── S10: Verify Kafka Event Stream ────────────────────
+    logSection('SCENARIO 10 — VERIFY KAFKA EVENT STREAM');
+    setScenario(10, 'running', 30);
+    await delay(1500); // give consumer time to process
+
+    let totalEvents = 0;
+    let eventsOk = true;
+
+    for (let i = 0; i < Math.min(bills.length, 4); i++) {
+      const r = await api('GET', `/api/payment-events/bill/${bills[i].id}`);
+      if (r.ok && r.data.data) {
+        const count = r.data.data.length;
+        totalEvents += count;
+        log(`✓ Bill #${bills[i].id} (${bills[i].invoiceNumber}) → ${count} event(s) in stream`, 'success');
+        r.data.data.forEach(e => {
+          log(`  → [${e.paymentStatus}] ₹${e.paidAmount} via ${e.paymentMethod} at ${new Date(e.occurredAt).toLocaleTimeString()}`, 'info');
+        });
+      } else {
+        log(`✗ No events found for Bill #${bills[i].id}`, 'warn');
+        eventsOk = false;
+      }
+      setScenario(10, 'running', ((i+1)/4)*90);
+      await delay(300);
+    }
+
+    log(`━━ Total Kafka events captured: ${totalEvents} ━━`, 'success');
+    setScenario(10, eventsOk && totalEvents > 0 ? 'done' : 'failed');
+    eventsOk && totalEvents > 0 ? passed++ : failed++;
+    updateStats();
+
+    // ── Final summary ──────────────────────────────────────
+    logSection('COMPLETE');
+    log(`✓ Scenarios passed: ${passed}`, 'success');
+    if (failed > 0) log(`✗ Scenarios failed: ${failed}`, 'error');
+    log(`Total API requests made: ${totalRequests}`, 'info');
+    log(`Total time: ${Date.now() - startTime}ms`, 'info');
+    log(`Check Kafka UI → http://localhost:8080 to see all events`, 'warn');
+
+    document.getElementById('runBtn').disabled = false;
+  }
+    </script>
+</body>
+</html>

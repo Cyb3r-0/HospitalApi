@@ -74,7 +74,8 @@ namespace HospitalApi
                 options.InstanceName = "HospitalApi_";
             });
 
-            builder.Services.AddAutoMapper(typeof(PatientProfile).Assembly);
+            // scan the entire executing assembly — picks up ALL profiles automatically (PatientProfile, DoctorProfile, etc.)
+            builder.Services.AddAutoMapper(typeof(Program).Assembly);
             builder.Services.AddScoped<IPatientRepository, PatientRepository>();
             builder.Services.AddScoped<IPatientService, PatientService>();
             builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
@@ -83,6 +84,10 @@ namespace HospitalApi
             builder.Services.AddScoped<IAppointmentService, AppointmentService>();
             builder.Services.AddScoped<IBillRepository, BillRepository>();
             builder.Services.AddScoped<IBillService, BillService>();
+
+            // Kafka — producer is singleton (one connection), consumer is a background worker
+            builder.Services.AddSingleton<HospitalApi.Kafka.IKafkaProducerService, HospitalApi.Kafka.KafkaProducerService>();
+            builder.Services.AddHostedService<HospitalApi.Kafka.KafkaPaymentConsumer>();
 
             builder.Services.AddCors(options =>
             {

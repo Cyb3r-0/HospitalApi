@@ -1,7 +1,9 @@
 ﻿using System.Text.Json;
 using AutoMapper;
 using HospitalApi.Dtos;
+using HospitalApi.Events;
 using HospitalApi.Helpers;
+using HospitalApi.Kafka;
 using HospitalApi.Models;
 using HospitalApi.Repositories;
 using Microsoft.Extensions.Caching.Distributed;
@@ -14,12 +16,14 @@ namespace HospitalApi.Services
         private readonly IBillRepository _repo;
         private readonly IMapper _mapper;
         private readonly IDistributedCache _cache;
+        private readonly IKafkaProducerService _kafka;
 
-        public BillService(IBillRepository repo, IMapper mapper, IDistributedCache cache)
+        public BillService(IBillRepository repo, IMapper mapper, IDistributedCache cache, IKafkaProducerService kafka)
         {
             _repo = repo;
             _mapper = mapper;
             _cache = cache;
+            _kafka = kafka;
         }
 
         public async Task<PagedResult<BillDto>> GetAllAsync(BillQueryDto query)
@@ -173,6 +177,7 @@ namespace HospitalApi.Services
             bill.UpdatedAt = DateTime.UtcNow;
             bill.UpdatedByUserId = updatedByUserId;
 
+            // Determine payment status based on amount paid
             if (bill.PaidAmount >= bill.TotalAmount)
             {
                 bill.PaymentStatus = PaymentStatus.Paid;
@@ -187,6 +192,31 @@ namespace HospitalApi.Services
 
             try { await _cache.RemoveAsync($"bill_{id}"); }
             catch { /* Redis unavailable */ }
+
+            // ✅ FIX: publish PaymentMade event to Kafka after saving
+            // If Kafka fails, payment is still saved in DB — no data loss
+            var evt = new PaymentMadeEvent
+            {
+                BillId = bill.Id,
+                InvoiceNumber = bill.InvoiceNumber,
+                PaidAmount = dto.PaidAmount,
+                TotalAmount = bill.TotalAmount,
+                RemainingBalance = bill.TotalAmount - bill.PaidAmount,
+                PaymentMethod = dto.PaymentMethod.ToString(),
+                TransactionReference = dto.TransactionReference,
+                PaymentStatus = bill.PaymentStatus.ToString(),
+                PatientId = bill.PatientId,
+                PatientName = bill.Patient?.Name ?? "",
+                DoctorId = bill.DoctorId,
+                DoctorName = bill.Doctor?.Name ?? "",
+                AppointmentId = bill.AppointmentId,
+                PaidByUserId = updatedByUserId
+            };
+
+            await _kafka.PublishAsync(
+                topic: "payment-events",
+                key: bill.Id.ToString(),
+                message: evt);
 
             return (true, null);
         }

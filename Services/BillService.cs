@@ -6,6 +6,7 @@ using HospitalApi.Helpers;
 using HospitalApi.Kafka;
 using HospitalApi.Models;
 using HospitalApi.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 
 namespace HospitalApi.Services
@@ -138,38 +139,45 @@ namespace HospitalApi.Services
             return (_mapper.Map<BillDto>(created), null);
         }
 
-        public async Task<(bool Success, string? Error)> UpdateAsync(int id, BillUpdateDto dto, int updatedByUserId)
+        public async Task<(bool Success, string? Error, bool Conflict)> UpdateAsync(int id, BillUpdateDto dto, int updatedByUserId)
         {
             var bill = await _repo.GetByIdAsync(id);
-            if (bill == null) return (false, null);
+            if (bill == null) return (false, null, false);
 
             // Cannot edit a paid bill
             if (bill.PaymentStatus == PaymentStatus.Paid)
-                return (false, "Cannot update a fully paid bill.");
+                return (false, "Cannot update a fully paid bill.", false);
 
             _mapper.Map(dto, bill);
             bill.TotalAmount = (dto.ConsultationFee + dto.MedicineFee + dto.OtherCharges + dto.TaxAmount) - dto.Discount;
             bill.UpdatedAt = DateTime.UtcNow;
             bill.UpdatedByUserId = updatedByUserId;
 
-            await _repo.SaveChangesAsync();
+            try
+            {
+                await _repo.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return (false, "Bill was modified by another request. Please reload and try again.", true);
+            }
 
             try { await _cache.RemoveAsync($"bill_{id}"); }
             catch { /* Redis unavailable */ }
 
-            return (true, null);
+            return (true, null, false);
         }
 
-        public async Task<(bool Success, string? Error)> PayAsync(int id, BillPayDto dto, int updatedByUserId)
+        public async Task<(bool Success, string? Error, bool Conflict)> PayAsync(int id, BillPayDto dto, int updatedByUserId)
         {
             var bill = await _repo.GetByIdAsync(id);
-            if (bill == null) return (false, null);
+            if (bill == null) return (false, null, false);
 
             if (bill.PaymentStatus == PaymentStatus.Cancelled)
-                return (false, "Cannot pay a cancelled bill.");
+                return (false, "Cannot pay a cancelled bill.", false);
 
             if (bill.PaymentStatus == PaymentStatus.Paid)
-                return (false, "Bill is already fully paid.");
+                return (false, "Bill is already fully paid.", false);
 
             bill.PaidAmount += dto.PaidAmount;
             bill.PaymentMethod = dto.PaymentMethod;
@@ -188,13 +196,19 @@ namespace HospitalApi.Services
                 bill.PaymentStatus = PaymentStatus.PartiallyPaid;
             }
 
-            await _repo.SaveChangesAsync();
+            try
+            {
+                await _repo.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return (false, "Payment conflict detected — bill was updated by another request. Please reload and try again.", true);
+            }
 
             try { await _cache.RemoveAsync($"bill_{id}"); }
             catch { /* Redis unavailable */ }
 
-            // ✅ FIX: publish PaymentMade event to Kafka after saving
-            // If Kafka fails, payment is still saved in DB — no data loss
+            // Publish PaymentMade event to Kafka after saving
             var evt = new PaymentMadeEvent
             {
                 BillId = bill.Id,
@@ -218,7 +232,7 @@ namespace HospitalApi.Services
                 key: bill.Id.ToString(),
                 message: evt);
 
-            return (true, null);
+            return (true, null, false);
         }
 
         public async Task<bool> DeleteAsync(int id)

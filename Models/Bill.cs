@@ -69,5 +69,11 @@ namespace HospitalApi.Models
 
         public int? UpdatedByUserId { get; set; }
         public User? UpdatedByUser { get; set; }
+
+        // --- Concurrency control ---
+        // ✅ SQL Server auto-increments this on every UPDATE
+        // EF throws DbUpdateConcurrencyException if two requests try to update same row version
+        [Timestamp]
+        public byte[] RowVersion { get; set; } = null!;
     }
 }

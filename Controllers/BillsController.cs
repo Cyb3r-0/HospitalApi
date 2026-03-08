@@ -84,7 +84,10 @@ namespace HospitalApi.Controllers
             if (userIdClaim == null) return Unauthorized();
             int userId = int.Parse(userIdClaim);
 
-            var (success, error) = await _service.UpdateAsync(id, dto, userId);
+            var (success, error, conflict) = await _service.UpdateAsync(id, dto, userId);
+
+            if (conflict)
+                return Conflict(new ApiResponse<object> { Success = false, Message = error ?? "Conflict detected." });
 
             if (!success && error == null)
                 return NotFound(new ApiResponse<object> { Success = false, Message = $"Bill with ID {id} not found." });
@@ -95,7 +98,7 @@ namespace HospitalApi.Controllers
             return NoContent();
         }
 
-        // POST api/bills/5/pay  ← dedicated pay endpoint
+        // POST api/bills/5/pay
         [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpPost("{id:int}/pay")]
         public async Task<IActionResult> Pay(int id, BillPayDto dto)
@@ -104,7 +107,11 @@ namespace HospitalApi.Controllers
             if (userIdClaim == null) return Unauthorized();
             int userId = int.Parse(userIdClaim);
 
-            var (success, error) = await _service.PayAsync(id, dto, userId);
+            var (success, error, conflict) = await _service.PayAsync(id, dto, userId);
+
+            // FIX: 409 Conflict returned when two requests try to pay same bill simultaneously
+            if (conflict)
+                return Conflict(new ApiResponse<object> { Success = false, Message = error ?? "Payment conflict detected." });
 
             if (!success && error == null)
                 return NotFound(new ApiResponse<object> { Success = false, Message = $"Bill with ID {id} not found." });

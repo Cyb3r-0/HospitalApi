@@ -9,6 +9,7 @@ namespace HospitalApi.Data
         public DbSet<Patient> Patients { get; set; } = null!;
         public DbSet<Doctor> Doctors { get; set; } = null!;
         public DbSet<Appointment> Appointments { get; set; } = null!;
+        public DbSet<Bill> Bills { get; set; } = null!;
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
 
@@ -57,6 +58,41 @@ namespace HospitalApi.Data
                 .WithMany(u => u.CreatedAppointments)
                 .HasForeignKey(a => a.CreatedByUserId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // Bill → Appointment
+            modelBuilder.Entity<Bill>()
+                .HasOne(b => b.Appointment)
+                .WithMany()
+                .HasForeignKey(b => b.AppointmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Bill → Patient
+            modelBuilder.Entity<Bill>()
+                .HasOne(b => b.Patient)
+                .WithMany()
+                .HasForeignKey(b => b.PatientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Bill → Doctor
+            modelBuilder.Entity<Bill>()
+                .HasOne(b => b.Doctor)
+                .WithMany()
+                .HasForeignKey(b => b.DoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Bill → CreatedByUser
+            modelBuilder.Entity<Bill>()
+                .HasOne(b => b.CreatedByUser)
+                .WithMany(u => u.CreatedBills)
+                .HasForeignKey(b => b.CreatedByUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Bill → UpdatedByUser
+            modelBuilder.Entity<Bill>()
+                .HasOne(b => b.UpdatedByUser)
+                .WithMany(u => u.UpdatedBills)
+                .HasForeignKey(b => b.UpdatedByUserId)
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

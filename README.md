@@ -249,9 +249,9 @@ In `DEBUG` builds, the stack trace is also included in the response.
 - [x] FluentValidation + AutoMapper
 - [x] Serilog structured logging
 - [x] Global exception middleware
+- [x] Doctors & Appointments modules
+- [x] Billing module
 - [ ] BCrypt password hashing
-- [ ] Doctors & Appointments modules
-- [ ] Billing module
 - [ ] Rate limiting
 - [ ] API versioning
 - [ ] Unit & integration tests

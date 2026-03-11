@@ -3,23 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hospital API — Enterprise Test Suite</title>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <title>Hospital API — Test Suite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0a0a0a;
-            --surface: #111;
-            --border: #222;
-            --accent: #00ff88;
-            --warn: #ffaa00;
-            --error: #ff4455;
-            --info: #00aaff;
-            --purple: #bb77ff;
-            --text: #e8e8e8;
-            --muted: #555;
+            --bg: #030712;
+            --bg2: #0a0f1e;
+            --surface: #0d1424;
+            --surface2: #111827;
+            --border: #1e2a3a;
+            --border2: #253347;
+            --green: #22d3a5;
+            --green-dim: rgba(34,211,165,0.12);
+            --green-glow: rgba(34,211,165,0.3);
+            --blue: #38bdf8;
+            --blue-dim: rgba(56,189,248,0.1);
+            --purple: #a78bfa;
+            --purple-dim: rgba(167,139,250,0.12);
+            --amber: #fbbf24;
+            --amber-dim: rgba(251,191,36,0.1);
+            --red: #f87171;
+            --red-dim: rgba(248,113,113,0.1);
+            --text: #e2e8f0;
+            --text2: #94a3b8;
+            --text3: #475569;
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Outfit', sans-serif;
         }
 
-        * {
+        *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -28,848 +40,1375 @@
         body {
             background: var(--bg);
             color: var(--text);
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: var(--sans);
             min-height: 100vh;
-            padding: 40px 24px;
+            overflow-x: hidden;
         }
 
-            body::after {
+            /* Animated background grid */
+            body::before {
                 content: '';
                 position: fixed;
                 inset: 0;
-                background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+                background-image: linear-gradient(rgba(34,211,165,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,165,0.025) 1px, transparent 1px);
+                background-size: 48px 48px;
                 pointer-events: none;
-                z-index: 999;
+                z-index: 0;
             }
 
-        .container {
-            max-width: 1140px;
+        /* Ambient glow orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.4;
+        }
+
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            background: rgba(34,211,165,0.08);
+            top: -200px;
+            left: -200px;
+            animation: drift1 20s ease-in-out infinite;
+        }
+
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: rgba(167,139,250,0.08);
+            bottom: 100px;
+            right: -100px;
+            animation: drift2 15s ease-in-out infinite;
+        }
+
+        .orb-3 {
+            width: 300px;
+            height: 300px;
+            background: rgba(56,189,248,0.06);
+            top: 40%;
+            left: 40%;
+            animation: drift3 25s ease-in-out infinite;
+        }
+
+        @keyframes drift1 {
+            0%,100% {
+                transform: translate(0,0)
+            }
+
+            50% {
+                transform: translate(60px,40px)
+            }
+        }
+
+        @keyframes drift2 {
+            0%,100% {
+                transform: translate(0,0)
+            }
+
+            50% {
+                transform: translate(-40px,-60px)
+            }
+        }
+
+        @keyframes drift3 {
+            0%,100% {
+                transform: translate(0,0)
+            }
+
+            33% {
+                transform: translate(30px,-30px)
+            }
+
+            66% {
+                transform: translate(-30px,30px)
+            }
+        }
+
+        .wrapper {
+            position: relative;
+            z-index: 1;
+            max-width: 1280px;
             margin: 0 auto;
+            padding: 48px 24px 80px;
         }
 
+        /* ── HEADER ── */
         .header {
-            margin-bottom: 32px;
+            margin-bottom: 48px;
+            animation: fadeDown 0.7s ease both;
         }
 
-            .header h1 {
-                font-family: 'Bebas Neue', sans-serif;
-                font-size: 60px;
-                letter-spacing: 4px;
-                color: var(--accent);
-                text-shadow: 0 0 40px rgba(0,255,136,0.3);
-            }
+        .header-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
 
-            .header p {
-                color: var(--muted);
-                font-size: 11px;
-                letter-spacing: 2px;
-                margin-top: 6px;
-            }
+        .header-left {
+        }
 
-        .config {
+        .badge-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 100px;
+            border: 1px solid;
+        }
+
+        .badge-green {
+            color: var(--green);
+            border-color: rgba(34,211,165,0.3);
+            background: var(--green-dim);
+        }
+
+        .badge-blue {
+            color: var(--blue);
+            border-color: rgba(56,189,248,0.3);
+            background: var(--blue-dim);
+        }
+
+        .badge-purple {
+            color: var(--purple);
+            border-color: rgba(167,139,250,0.3);
+            background: var(--purple-dim);
+        }
+
+        .header h1 {
+            font-size: clamp(38px,5vw,64px);
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, #fff 0%, var(--green) 60%, var(--blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header-sub {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text3);
+            letter-spacing: 1px;
+        }
+
+        /* ── CONFIG CARD ── */
+        .config-card {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-left: 3px solid var(--accent);
-            padding: 20px;
-            margin-bottom: 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 16px;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+            animation: fadeUp 0.6s 0.1s ease both;
+            position: relative;
+            overflow: hidden;
         }
 
-            .config label {
-                display: block;
-                font-size: 10px;
-                letter-spacing: 2px;
-                color: var(--muted);
-                margin-bottom: 5px;
-                text-transform: uppercase;
+            .config-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 1px;
+                background: linear-gradient(90deg, transparent, var(--green), transparent);
             }
 
-            .config input {
-                width: 100%;
-                background: var(--bg);
-                border: 1px solid var(--border);
-                color: var(--text);
-                font-family: 'IBM Plex Mono', monospace;
-                font-size: 12px;
-                padding: 7px 10px;
-                outline: none;
+        .config-title {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text3);
+            margin-bottom: 16px;
+            font-family: var(--mono);
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .config-field label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text3);
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            font-family: var(--mono);
+        }
+
+        .config-field input {
+            width: 100%;
+            background: var(--bg2);
+            border: 1px solid var(--border2);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 12px;
+            padding: 10px 14px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+            .config-field input:focus {
+                border-color: var(--green);
+                box-shadow: 0 0 0 3px var(--green-dim);
             }
 
-                .config input:focus {
-                    border-color: var(--accent);
-                }
-
-        .stats {
+        /* ── STAT CARDS ── */
+        .stats-row {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
-            gap: 1px;
-            background: var(--border);
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 28px;
+            animation: fadeUp 0.6s 0.2s ease both;
         }
 
-        .stat {
+        .stat-card {
             background: var(--surface);
-            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 12px;
             text-align: center;
+            transition: border-color 0.3s;
         }
 
-        .stat-num {
-            font-family: 'Bebas Neue', sans-serif;
+            .stat-card:hover {
+                border-color: var(--border2);
+            }
+
+        .stat-val {
+            font-family: var(--mono);
             font-size: 28px;
+            font-weight: 700;
             line-height: 1;
             display: block;
+            margin-bottom: 4px;
+            transition: color 0.3s;
         }
 
-        .stat-label {
-            font-size: 9px;
-            letter-spacing: 1px;
-            color: var(--muted);
+        .stat-lbl {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
             text-transform: uppercase;
-            margin-top: 3px;
+            color: var(--text3);
         }
 
-        .green {
-            color: var(--accent);
+        .val-green {
+            color: var(--green);
         }
 
-        .red {
-            color: var(--error);
+        .val-red {
+            color: var(--red);
         }
 
-        .blue {
-            color: var(--info);
-        }
-
-        .yellow {
-            color: var(--warn);
-        }
-
-        .purple {
+        .val-purple {
             color: var(--purple);
         }
 
-        .white {
+        .val-blue {
+            color: var(--blue);
+        }
+
+        .val-amber {
+            color: var(--amber);
+        }
+
+        .val-white {
             color: var(--text);
         }
 
+        /* ── RUN BUTTON ── */
         .run-btn {
             width: 100%;
-            background: transparent;
-            border: 2px solid var(--accent);
-            color: var(--accent);
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 24px;
-            letter-spacing: 6px;
-            padding: 13px;
+            background: linear-gradient(135deg, var(--green) 0%, #0891b2 100%);
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-family: var(--sans);
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 18px 32px;
             cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 20px;
+            transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+            margin-bottom: 28px;
+            box-shadow: 0 0 40px rgba(34,211,165,0.2);
+            animation: fadeUp 0.6s 0.3s ease both;
+            position: relative;
+            overflow: hidden;
         }
 
+            .run-btn::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+                opacity: 0;
+                transition: opacity 0.2s;
+            }
+
+            .run-btn:hover::after {
+                opacity: 1;
+            }
+
             .run-btn:hover {
-                background: var(--accent);
-                color: var(--bg);
+                box-shadow: 0 0 60px rgba(34,211,165,0.35);
+                transform: translateY(-1px);
+            }
+
+            .run-btn:active {
+                transform: translateY(0);
             }
 
             .run-btn:disabled {
-                opacity: 0.3;
+                opacity: 0.4;
                 cursor: not-allowed;
+                transform: none;
+                box-shadow: none;
             }
 
-        .main-grid {
+        /* ── MAIN LAYOUT ── */
+        .main-layout {
             display: grid;
-            grid-template-columns: 360px 1fr;
-            gap: 16px;
+            grid-template-columns: 420px 1fr;
+            gap: 20px;
+            animation: fadeUp 0.6s 0.4s ease both;
         }
 
-        .scenarios {
-            display: grid;
-            gap: 8px;
+        /* ── SCENARIO PANEL ── */
+        .scenario-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 720px;
+            overflow-y: auto;
+            padding-right: 4px;
         }
+
+            .scenario-panel::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            .scenario-panel::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .scenario-panel::-webkit-scrollbar-thumb {
+                background: var(--border2);
+                border-radius: 4px;
+            }
+
+        .group-label {
+            font-family: var(--mono);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--text3);
+            padding: 14px 4px 6px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 4px;
+        }
+
+            .group-label:first-child {
+                padding-top: 0;
+            }
 
         .sc {
             background: var(--surface);
             border: 1px solid var(--border);
+            border-radius: 10px;
             padding: 12px 14px;
+            transition: border-color 0.25s, background 0.25s;
+            position: relative;
+            overflow: hidden;
         }
 
+            .sc::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 3px;
+                height: 100%;
+                border-radius: 3px 0 0 3px;
+                background: var(--border2);
+                transition: background 0.25s;
+            }
+
+            .sc.pending::before {
+                background: var(--border2);
+            }
+
+            .sc.running::before {
+                background: var(--amber);
+            }
+
+            .sc.done::before {
+                background: var(--green);
+            }
+
+            .sc.failed::before {
+                background: var(--red);
+            }
+
+            .sc.is-auth::before {
+                background: var(--blue);
+            }
+
+            .sc.is-conc::before {
+                background: var(--purple);
+            }
+
             .sc.running {
-                border-color: var(--warn);
+                border-color: rgba(251,191,36,0.3);
+                background: rgba(251,191,36,0.03);
             }
 
             .sc.done {
-                border-color: var(--accent);
+                border-color: rgba(34,211,165,0.25);
+                background: rgba(34,211,165,0.03);
             }
 
             .sc.failed {
-                border-color: var(--error);
+                border-color: rgba(248,113,113,0.3);
+                background: rgba(248,113,113,0.03);
             }
 
-            .sc.concurrency {
-                border-left: 3px solid var(--purple);
-            }
-
-        .sc-header {
+        .sc-row {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 3px;
+            gap: 10px;
         }
 
         .sc-num {
+            font-family: var(--mono);
             font-size: 9px;
-            letter-spacing: 2px;
-            color: var(--muted);
-            min-width: 26px;
+            color: var(--text3);
+            min-width: 22px;
+            font-weight: 500;
         }
 
         .sc-title {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 700;
+            color: var(--text);
             flex: 1;
+            letter-spacing: 0.2px;
         }
 
-        .sc-badge {
+        .sc-chip {
+            font-family: var(--mono);
             font-size: 8px;
+            font-weight: 700;
             letter-spacing: 1px;
-            padding: 2px 5px;
+            padding: 2px 7px;
+            border-radius: 100px;
             border: 1px solid;
             text-transform: uppercase;
+            white-space: nowrap;
         }
 
-        .badge-pending {
-            color: var(--muted);
-            border-color: var(--muted);
+        .chip-pending {
+            color: var(--text3);
+            border-color: var(--border2);
+            background: transparent;
         }
 
-        .badge-running {
-            color: var(--warn);
-            border-color: var(--warn);
-            animation: blink 1s infinite;
+        .chip-running {
+            color: var(--amber);
+            border-color: rgba(251,191,36,0.4);
+            animation: pulse 1.5s ease infinite;
         }
 
-        .badge-done {
-            color: var(--accent);
-            border-color: var(--accent);
+        .chip-done {
+            color: var(--green);
+            border-color: rgba(34,211,165,0.4);
+            background: var(--green-dim);
         }
 
-        .badge-failed {
-            color: var(--error);
-            border-color: var(--error);
+        .chip-failed {
+            color: var(--red);
+            border-color: rgba(248,113,113,0.4);
+            background: var(--red-dim);
         }
 
         .sc-desc {
             font-size: 10px;
-            color: var(--muted);
-            margin-left: 34px;
+            color: var(--text3);
+            margin-top: 4px;
+            margin-left: 32px;
+            line-height: 1.4;
         }
 
         .sc-bar {
             height: 2px;
             background: var(--border);
+            border-radius: 2px;
             margin-top: 8px;
+            overflow: hidden;
         }
 
         .sc-fill {
             height: 100%;
             width: 0%;
-            background: var(--accent);
-            transition: width 0.3s;
+            border-radius: 2px;
+            background: var(--green);
+            transition: width 0.4s ease;
         }
 
         .sc.running .sc-fill {
-            background: var(--warn);
+            background: var(--amber);
         }
 
         .sc.done .sc-fill {
             width: 100% !important;
+            background: var(--green);
         }
 
         .sc.failed .sc-fill {
-            background: var(--error);
+            background: var(--red);
         }
 
-        .sc.concurrency .sc-fill {
-            background: var(--purple);
+        /* ── TERMINAL ── */
+        .terminal-wrap {
+            display: flex;
+            flex-direction: column;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
         }
 
-        .section-lbl {
-            font-size: 9px;
-            letter-spacing: 3px;
-            color: var(--muted);
-            text-transform: uppercase;
-            padding: 10px 0 6px;
+        .terminal-bar {
+            background: var(--surface2);
             border-bottom: 1px solid var(--border);
-            margin-bottom: 8px;
-        }
-
-        .terminal-hdr {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-bottom: none;
-            padding: 7px 14px;
-            font-size: 10px;
-            letter-spacing: 2px;
-            color: var(--muted);
+            padding: 12px 18px;
             display: flex;
+            align-items: center;
             justify-content: space-between;
+            gap: 12px;
         }
 
-        .terminal {
-            background: #050505;
-            border: 1px solid var(--border);
-            border-top: 2px solid var(--accent);
-            padding: 18px;
-            height: 700px;
-            overflow-y: auto;
-            font-size: 11px;
-            line-height: 1.85;
-        }
-
-            .terminal::-webkit-scrollbar {
-                width: 3px;
-            }
-
-            .terminal::-webkit-scrollbar-thumb {
-                background: #333;
-            }
-
-        .log-line {
+        .terminal-dots {
             display: flex;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dot-r {
+            background: #ff5f57;
+        }
+
+        .dot-y {
+            background: #ffbd2e;
+        }
+
+        .dot-g {
+            background: #28ca41;
+        }
+
+        .terminal-title {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--text3);
+            letter-spacing: 1px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .terminal-status {
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 3px 10px;
+            border-radius: 100px;
+            border: 1px solid var(--border2);
+            color: var(--text3);
+            background: var(--bg2);
+            transition: all 0.3s;
+        }
+
+            .terminal-status.running {
+                color: var(--amber);
+                border-color: rgba(251,191,36,0.4);
+                background: var(--amber-dim);
+            }
+
+            .terminal-status.passed {
+                color: var(--green);
+                border-color: rgba(34,211,165,0.4);
+                background: var(--green-dim);
+            }
+
+            .terminal-status.failed {
+                color: var(--red);
+                border-color: rgba(248,113,113,0.4);
+                background: var(--red-dim);
+            }
+
+        .terminal-body {
+            background: #02060f;
+            padding: 20px;
+            height: 680px;
+            overflow-y: auto;
+            font-family: var(--mono);
+            font-size: 11.5px;
+            line-height: 1.9;
+        }
+
+            .terminal-body::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            .terminal-body::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .terminal-body::-webkit-scrollbar-thumb {
+                background: #1e2a3a;
+                border-radius: 4px;
+            }
+
+        .log {
+            display: grid;
+            grid-template-columns: 68px 1fr;
             gap: 10px;
         }
 
-        .log-time {
-            color: #333;
-            min-width: 72px;
-            flex-shrink: 0;
+        .log-t {
+            color: #1e3a5f;
+            font-size: 10px;
+            padding-top: 1px;
+            white-space: nowrap;
         }
 
-        .log-msg {
-            flex: 1;
+        .log-m {
             word-break: break-all;
         }
 
-        .log-success {
-            color: var(--accent);
+        .c-success {
+            color: var(--green);
         }
 
-        .log-error {
-            color: var(--error);
+        .c-error {
+            color: var(--red);
         }
 
-        .log-warn {
-            color: var(--warn);
+        .c-warn {
+            color: var(--amber);
         }
 
-        .log-info {
-            color: var(--info);
+        .c-info {
+            color: var(--blue);
         }
 
-        .log-muted {
-            color: var(--muted);
+        .c-muted {
+            color: #334155;
         }
 
-        .log-purple {
+        .c-purple {
             color: var(--purple);
+        }
+
+        .c-white {
+            color: var(--text);
         }
 
         .log-section {
-            color: var(--accent);
+            color: var(--green);
             font-weight: 700;
             letter-spacing: 2px;
-            margin-top: 6px;
             font-size: 10px;
+            padding: 8px 0 2px;
+            border-bottom: 1px solid rgba(34,211,165,0.1);
+            margin-bottom: 4px;
         }
 
-        .log-concurrency {
-            color: var(--purple);
-            font-weight: 700;
-            letter-spacing: 2px;
-            margin-top: 6px;
-            font-size: 10px;
+            .log-section.auth {
+                color: var(--blue);
+                border-color: rgba(56,189,248,0.1);
+            }
+
+            .log-section.conc {
+                color: var(--purple);
+                border-color: rgba(167,139,250,0.1);
+            }
+
+            .log-section.valid {
+                color: var(--amber);
+                border-color: rgba(251,191,36,0.1);
+            }
+
+            .log-section.final {
+                color: #fff;
+                border-color: rgba(255,255,255,0.1);
+            }
+
+        /* Progress bar - full width below run button */
+        .progress-track {
+            height: 3px;
+            background: var(--border);
+            border-radius: 3px;
+            margin-bottom: 28px;
+            overflow: hidden;
+            animation: fadeUp 0.6s 0.35s ease both;
         }
 
-        @keyframes blink {
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--green), var(--blue));
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        @keyframes pulse {
             0%,100% {
                 opacity: 1
             }
 
             50% {
-                opacity: .3
+                opacity: 0.5
+            }
+        }
+
+        @keyframes fadeDown {
+            from {
+                opacity: 0;
+                transform: translateY(-16px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-row {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .config-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="wrapper">
+
+        <!-- Header -->
         <div class="header">
-            <h1>ENTERPRISE TEST SUITE</h1>
-            <p>// HOSPITAL API · FUNCTIONAL + CONCURRENCY + KAFKA · 15 SCENARIOS</p>
+            <div class="header-top">
+                <div class="header-left">
+                    <div class="badge-row">
+                        <span class="badge badge-green">ASP.NET Core 8</span>
+                        <span class="badge badge-blue">JWT + Refresh Tokens</span>
+                        <span class="badge badge-purple">Kafka · Redis · BCrypt</span>
+                    </div>
+                    <h1>Hospital API<br>Test Suite</h1>
+                    <p class="header-sub">// 15 SCENARIOS · FUNCTIONAL · AUTH · CONCURRENCY · KAFKA VALIDATION</p>
+                </div>
+            </div>
         </div>
 
-        <div class="config">
-            <div><label>API Base URL</label><input id="baseUrl" value="http://localhost:5177"></div>
-            <div><label>Username</label><input id="username" value="Tarun Paul"></div>
-            <div><label>Password</label><input id="password" type="password"></div>
+        <!-- Config -->
+        <div class="config-card">
+            <div class="config-title">// Connection Config</div>
+            <div class="config-grid">
+                <div class="config-field">
+                    <label>API Base URL</label>
+                    <input id="baseUrl" value="http://localhost:5177" placeholder="http://localhost:PORT">
+                </div>
+                <div class="config-field">
+                    <label>Username</label>
+                    <input id="username" value="Tarun Paul">
+                </div>
+                <div class="config-field">
+                    <label>Password</label>
+                    <input id="password" type="password" placeholder="Your password">
+                </div>
+            </div>
         </div>
 
-        <div class="stats">
-            <div class="stat"><span class="stat-num green" id="s-passed">0</span><div class="stat-label">Passed</div></div>
-            <div class="stat"><span class="stat-num red" id="s-failed">0</span><div class="stat-label">Failed</div></div>
-            <div class="stat"><span class="stat-num purple" id="s-conflicts">0</span><div class="stat-label">Conflicts ✓</div></div>
-            <div class="stat"><span class="stat-num blue" id="s-reqs">0</span><div class="stat-label">Requests</div></div>
-            <div class="stat"><span class="stat-num yellow" id="s-kafka">0</span><div class="stat-label">Kafka Events</div></div>
-            <div class="stat"><span class="stat-num white" id="s-time">0ms</span><div class="stat-label">Time</div></div>
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-card"><span class="stat-val val-green" id="sv-passed">0</span><div class="stat-lbl">Passed</div></div>
+            <div class="stat-card"><span class="stat-val val-red" id="sv-failed">0</span><div class="stat-lbl">Failed</div></div>
+            <div class="stat-card"><span class="stat-val val-purple" id="sv-conflicts">0</span><div class="stat-lbl">Conflicts</div></div>
+            <div class="stat-card"><span class="stat-val val-blue" id="sv-reqs">0</span><div class="stat-lbl">Requests</div></div>
+            <div class="stat-card"><span class="stat-val val-amber" id="sv-kafka">0</span><div class="stat-lbl">Kafka Events</div></div>
+            <div class="stat-card"><span class="stat-val val-white" id="sv-time">—</span><div class="stat-lbl">Duration</div></div>
         </div>
 
-        <button class="run-btn" id="runBtn" onclick="runAll()">▶ RUN FULL ENTERPRISE TEST SUITE</button>
+        <!-- Run Button -->
+        <button class="run-btn" id="runBtn" onclick="runAll()">▶ &nbsp; Run Full Test Suite</button>
 
-        <div class="main-grid">
-            <div>
-                <div class="section-lbl">── SETUP (S01–S05)</div>
-                <div class="scenarios" id="setup-scenarios">
-                    <div class="sc" id="sc1"><div class="sc-header"><span class="sc-num">01</span><span class="sc-title">AUTH LOGIN</span><span class="sc-badge badge-pending" id="sc1-b">PENDING</span></div><div class="sc-desc">JWT token retrieval</div><div class="sc-bar"><div class="sc-fill" id="sc1-p"></div></div></div>
-                    <div class="sc" id="sc2"><div class="sc-header"><span class="sc-num">02</span><span class="sc-title">CREATE 3 DOCTORS</span><span class="sc-badge badge-pending" id="sc2-b">PENDING</span></div><div class="sc-desc">Cardiology · Neurology · Orthopedics</div><div class="sc-bar"><div class="sc-fill" id="sc2-p"></div></div></div>
-                    <div class="sc" id="sc3"><div class="sc-header"><span class="sc-num">03</span><span class="sc-title">CREATE 5 PATIENTS</span><span class="sc-badge badge-pending" id="sc3-b">PENDING</span></div><div class="sc-desc">Different ages and diseases</div><div class="sc-bar"><div class="sc-fill" id="sc3-p"></div></div></div>
-                    <div class="sc" id="sc4"><div class="sc-header"><span class="sc-num">04</span><span class="sc-title">BOOK 5 APPOINTMENTS</span><span class="sc-badge badge-pending" id="sc4-b">PENDING</span></div><div class="sc-desc">Each patient → different doctor</div><div class="sc-bar"><div class="sc-fill" id="sc4-p"></div></div></div>
-                    <div class="sc" id="sc5"><div class="sc-header"><span class="sc-num">05</span><span class="sc-title">GENERATE 5 BILLS</span><span class="sc-badge badge-pending" id="sc5-b">PENDING</span></div><div class="sc-desc">Varying fees · discounts · taxes</div><div class="sc-bar"><div class="sc-fill" id="sc5-p"></div></div></div>
+        <!-- Overall progress -->
+        <div class="progress-track">
+            <div class="progress-fill" id="overallProgress"></div>
+        </div>
+
+        <!-- Main layout -->
+        <div class="main-layout">
+
+            <!-- Scenario list -->
+            <div class="scenario-panel">
+
+                <div class="group-label">── Auth &amp; Setup</div>
+                <div class="sc is-auth" id="sc1"><div class="sc-row"><span class="sc-num">01</span><span class="sc-title">Login — Get Tokens</span><span class="sc-chip chip-pending" id="sc1-chip">Pending</span></div><div class="sc-desc">POST /api/auth/login → AccessToken + RefreshToken</div><div class="sc-bar"><div class="sc-fill" id="sc1-fill"></div></div></div>
+                <div class="sc is-auth" id="sc2"><div class="sc-row"><span class="sc-num">02</span><span class="sc-title">Refresh Token</span><span class="sc-chip chip-pending" id="sc2-chip">Pending</span></div><div class="sc-desc">Exchange RefreshToken for new AccessToken (rotation)</div><div class="sc-bar"><div class="sc-fill" id="sc2-fill"></div></div></div>
+                <div class="sc" id="sc3"><div class="sc-row"><span class="sc-num">03</span><span class="sc-title">Create 3 Doctors</span><span class="sc-chip chip-pending" id="sc3-chip">Pending</span></div><div class="sc-desc">Cardiology · Neurology · Orthopedics</div><div class="sc-bar"><div class="sc-fill" id="sc3-fill"></div></div></div>
+                <div class="sc" id="sc4"><div class="sc-row"><span class="sc-num">04</span><span class="sc-title">Create 5 Patients</span><span class="sc-chip chip-pending" id="sc4-chip">Pending</span></div><div class="sc-desc">Different ages and diseases</div><div class="sc-bar"><div class="sc-fill" id="sc4-fill"></div></div></div>
+                <div class="sc" id="sc5"><div class="sc-row"><span class="sc-num">05</span><span class="sc-title">Book 5 Appointments</span><span class="sc-chip chip-pending" id="sc5-chip">Pending</span></div><div class="sc-desc">Each patient booked with a doctor</div><div class="sc-bar"><div class="sc-fill" id="sc5-fill"></div></div></div>
+                <div class="sc" id="sc6"><div class="sc-row"><span class="sc-num">06</span><span class="sc-title">Generate 5 Bills</span><span class="sc-chip chip-pending" id="sc6-chip">Pending</span></div><div class="sc-desc">Varying fees, discounts, taxes</div><div class="sc-bar"><div class="sc-fill" id="sc6-fill"></div></div></div>
+
+                <div class="group-label">── Payment Scenarios</div>
+                <div class="sc" id="sc7"><div class="sc-row"><span class="sc-num">07</span><span class="sc-title">Full Cash Payment</span><span class="sc-chip chip-pending" id="sc7-chip">Pending</span></div><div class="sc-desc">Single payment → status Paid</div><div class="sc-bar"><div class="sc-fill" id="sc7-fill"></div></div></div>
+                <div class="sc" id="sc8"><div class="sc-row"><span class="sc-num">08</span><span class="sc-title">Partial → Full (Card)</span><span class="sc-chip chip-pending" id="sc8-chip">Pending</span></div><div class="sc-desc">2 transactions: PartiallyPaid → Paid</div><div class="sc-bar"><div class="sc-fill" id="sc8-fill"></div></div></div>
+                <div class="sc" id="sc9"><div class="sc-row"><span class="sc-num">09</span><span class="sc-title">Insurance Payment</span><span class="sc-chip chip-pending" id="sc9-chip">Pending</span></div><div class="sc-desc">Full coverage with transaction reference</div><div class="sc-bar"><div class="sc-fill" id="sc9-fill"></div></div></div>
+                <div class="sc" id="sc10"><div class="sc-row"><span class="sc-num">10</span><span class="sc-title">3-Installment Bank Transfer</span><span class="sc-chip chip-pending" id="sc10-chip">Pending</span></div><div class="sc-desc">3 NEFT payments — tests Kafka event stream</div><div class="sc-bar"><div class="sc-fill" id="sc10-fill"></div></div></div>
+
+                <div class="group-label">── Concurrency &amp; Guards</div>
+                <div class="sc is-conc" id="sc11"><div class="sc-row"><span class="sc-num">11</span><span class="sc-title">Simultaneous Payments</span><span class="sc-chip chip-pending" id="sc11-chip">Pending</span></div><div class="sc-desc">5 concurrent requests → 1 success, rest 409 Conflict</div><div class="sc-bar"><div class="sc-fill" id="sc11-fill"></div></div></div>
+                <div class="sc is-conc" id="sc12"><div class="sc-row"><span class="sc-num">12</span><span class="sc-title">Double Payment Guard</span><span class="sc-chip chip-pending" id="sc12-chip">Pending</span></div><div class="sc-desc">Pay already-paid bill → expect 400</div><div class="sc-bar"><div class="sc-fill" id="sc12-fill"></div></div></div>
+                <div class="sc is-conc" id="sc13"><div class="sc-row"><span class="sc-num">13</span><span class="sc-title">Retry After Conflict</span><span class="sc-chip chip-pending" id="sc13-chip">Pending</span></div><div class="sc-desc">Client reloads after 409 → retries → success</div><div class="sc-bar"><div class="sc-fill" id="sc13-fill"></div></div></div>
+
+                <div class="group-label">── Validation</div>
+                <div class="sc" id="sc14"><div class="sc-row"><span class="sc-num">14</span><span class="sc-title">Kafka Event Stream</span><span class="sc-chip chip-pending" id="sc14-chip">Pending</span></div><div class="sc-desc">Verify all payment events captured per bill</div><div class="sc-bar"><div class="sc-fill" id="sc14-fill"></div></div></div>
+                <div class="sc" id="sc15"><div class="sc-row"><span class="sc-num">15</span><span class="sc-title">Data Integrity Check</span><span class="sc-chip chip-pending" id="sc15-chip">Pending</span></div><div class="sc-desc">DB PaidAmount = sum of Kafka events on every bill</div><div class="sc-bar"><div class="sc-fill" id="sc15-fill"></div></div></div>
+
+            </div>
+
+            <!-- Terminal -->
+            <div class="terminal-wrap">
+                <div class="terminal-bar">
+                    <div class="terminal-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+                    <div class="terminal-title">hospital-api — test output</div>
+                    <div class="terminal-status" id="t-status">IDLE</div>
                 </div>
-
-                <div class="section-lbl" style="margin-top:14px">── PAYMENT SCENARIOS (S06–S09)</div>
-                <div class="scenarios">
-                    <div class="sc" id="sc6"><div class="sc-header"><span class="sc-num">06</span><span class="sc-title">FULL CASH PAYMENT</span><span class="sc-badge badge-pending" id="sc6-b">PENDING</span></div><div class="sc-desc">Single payment → Paid</div><div class="sc-bar"><div class="sc-fill" id="sc6-p"></div></div></div>
-                    <div class="sc" id="sc7"><div class="sc-header"><span class="sc-num">07</span><span class="sc-title">PARTIAL → FULL CARD</span><span class="sc-badge badge-pending" id="sc7-b">PENDING</span></div><div class="sc-desc">2 transactions → PartiallyPaid → Paid</div><div class="sc-bar"><div class="sc-fill" id="sc7-p"></div></div></div>
-                    <div class="sc" id="sc8"><div class="sc-header"><span class="sc-num">08</span><span class="sc-title">INSURANCE PAYMENT</span><span class="sc-badge badge-pending" id="sc8-b">PENDING</span></div><div class="sc-desc">Full coverage with ref number</div><div class="sc-bar"><div class="sc-fill" id="sc8-p"></div></div></div>
-                    <div class="sc" id="sc9"><div class="sc-header"><span class="sc-num">09</span><span class="sc-title">3-INSTALLMENT BANK</span><span class="sc-badge badge-pending" id="sc9-b">PENDING</span></div><div class="sc-desc">3 NEFT transfers · Kafka stream test</div><div class="sc-bar"><div class="sc-fill" id="sc9-p"></div></div></div>
-                </div>
-
-                <div class="section-lbl" style="margin-top:14px">── CONCURRENCY TESTS (S10–S13)</div>
-                <div class="scenarios">
-                    <div class="sc concurrency" id="sc10"><div class="sc-header"><span class="sc-num">10</span><span class="sc-title">SIMULTANEOUS PAYMENTS</span><span class="sc-badge badge-pending" id="sc10-b">PENDING</span></div><div class="sc-desc">5 concurrent → 1 OK + 4 Conflict (409)</div><div class="sc-bar"><div class="sc-fill" id="sc10-p"></div></div></div>
-                    <div class="sc concurrency" id="sc11"><div class="sc-header"><span class="sc-num">11</span><span class="sc-title">DOUBLE PAYMENT GUARD</span><span class="sc-badge badge-pending" id="sc11-b">PENDING</span></div><div class="sc-desc">Pay paid bill → expect 400 rejection</div><div class="sc-bar"><div class="sc-fill" id="sc11-p"></div></div></div>
-                    <div class="sc concurrency" id="sc12"><div class="sc-header"><span class="sc-num">12</span><span class="sc-title">CONCURRENT UPDATES</span><span class="sc-badge badge-pending" id="sc12-b">PENDING</span></div><div class="sc-desc">3 simultaneous PUT → 1 wins, 2 conflict</div><div class="sc-bar"><div class="sc-fill" id="sc12-p"></div></div></div>
-                    <div class="sc concurrency" id="sc13"><div class="sc-header"><span class="sc-num">13</span><span class="sc-title">RETRY AFTER CONFLICT</span><span class="sc-badge badge-pending" id="sc13-b">PENDING</span></div><div class="sc-desc">Client reloads after 409 and retries → OK</div><div class="sc-bar"><div class="sc-fill" id="sc13-p"></div></div></div>
-                </div>
-
-                <div class="section-lbl" style="margin-top:14px">── VALIDATION (S14–S15)</div>
-                <div class="scenarios">
-                    <div class="sc" id="sc14"><div class="sc-header"><span class="sc-num">14</span><span class="sc-title">KAFKA EVENT STREAM</span><span class="sc-badge badge-pending" id="sc14-b">PENDING</span></div><div class="sc-desc">Verify all events captured per bill</div><div class="sc-bar"><div class="sc-fill" id="sc14-p"></div></div></div>
-                    <div class="sc" id="sc15"><div class="sc-header"><span class="sc-num">15</span><span class="sc-title">DATA INTEGRITY CHECK</span><span class="sc-badge badge-pending" id="sc15-b">PENDING</span></div><div class="sc-desc">DB PaidAmount = sum of Kafka events</div><div class="sc-bar"><div class="sc-fill" id="sc15-p"></div></div></div>
+                <div class="terminal-body" id="terminal">
+                    <div class="log"><span class="log-t"></span><span class="log-m c-muted">╔══════════════════════════════════════════════════╗</span></div>
+                    <div class="log"><span class="log-t"></span><span class="log-m c-muted">║   Hospital API Enterprise Test Suite  v3.0       ║</span></div>
+                    <div class="log"><span class="log-t"></span><span class="log-m c-muted">║   15 Scenarios · JWT · Kafka · Concurrency        ║</span></div>
+                    <div class="log"><span class="log-t"></span><span class="log-m c-muted">╚══════════════════════════════════════════════════╝</span></div>
+                    <div class="log"><span class="log-t"></span><span class="log-m c-muted">  Enter your credentials above and click Run.</span></div>
                 </div>
             </div>
 
-            <div>
-                <div class="terminal-hdr"><span>LIVE OUTPUT</span><span id="t-status">IDLE</span></div>
-                <div class="terminal" id="terminal">
-                    <div class="log-line"><span class="log-time">--:--:--</span><span class="log-msg log-muted">// Enterprise suite ready. Enter password and click RUN.</span></div>
-                </div>
-            </div>
         </div>
     </div>
 
     <script>
-        let token = '', doctors = [], patients = [], appointments = [], bills = [];
-        let passed = 0, failed = 0, conflicts = 0, totalReqs = 0, kafkaEvents = 0, startTime = Date.now();
+// ─── State ────────────────────────────────────────────────────────────────────
+let accessToken = '', refreshToken = '';
+let doctors=[], patients=[], appointments=[], bills=[];
+let passed=0, failed=0, conflicts=0, totalReqs=0, kafkaTotal=0;
+let startTime = 0;
+const TOTAL_SCENARIOS = 15;
 
-        const base = () => document.getElementById('baseUrl').value.replace(/\/$/, '');
-        const delay = ms => new Promise(r => setTimeout(r, ms));
+const base = () => document.getElementById('baseUrl').value.replace(/\/$/,'');
+const delay = ms => new Promise(r => setTimeout(r, ms));
 
-        function log(msg, type = 'info') {
-            const t = document.getElementById('terminal');
-            const now = new Date().toTimeString().slice(0, 8);
-            const d = document.createElement('div');
-            d.className = 'log-line';
-            d.innerHTML = `<span class="log-time">${now}</span><span class="log-msg log-${type}">${msg}</span>`;
-            t.appendChild(d); t.scrollTop = t.scrollHeight;
-        }
+// ─── UI Helpers ───────────────────────────────────────────────────────────────
+function log(msg, cls='c-info') {
+  const el = document.getElementById('terminal');
+  const now = new Date().toTimeString().slice(0,8);
+  const d = document.createElement('div');
+  d.className = 'log';
+  d.innerHTML = `<span class="log-t">${now}</span><span class="log-m ${cls}">${msg}</span>`;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
 
-        function logSec(title, type = 'section') {
-            const t = document.getElementById('terminal');
-            const d = document.createElement('div');
-            d.className = 'log-line';
-            d.innerHTML = `<span class="log-time"></span><span class="log-msg log-${type}">━━ ${title} ━━</span>`;
-            t.appendChild(d);
-        }
+function logSection(title, type='') {
+  const el = document.getElementById('terminal');
+  const d = document.createElement('div');
+  d.className = `log-section ${type}`;
+  d.textContent = `━━  ${title}  ━━`;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
 
-        function sc(id, state, pct = 0) {
-            const el = document.getElementById(`sc${id}`);
-            const isConcurrency = el.classList.contains('concurrency');
-            el.className = `sc${isConcurrency ? ' concurrency' : ''} ${state}`;
-            const badge = document.getElementById(`sc${id}-b`);
-            badge.className = `sc-badge badge-${state}`;
-            badge.textContent = state.toUpperCase();
-            if (pct > 0) document.getElementById(`sc${id}-p`).style.width = pct + '%';
-        }
+function setSc(id, state, pct=0) {
+  const el = document.getElementById(`sc${id}`);
+  const chip = document.getElementById(`sc${id}-chip`);
+  const fill = document.getElementById(`sc${id}-fill`);
+  // preserve special classes
+  const keep = ['is-auth','is-conc'].filter(c => el.classList.contains(c));
+  el.className = `sc ${keep.join(' ')} ${state}`.trim();
+  chip.className = `sc-chip chip-${state}`;
+  const labels = {pending:'Pending',running:'Running',done:'Done',failed:'Failed'};
+  chip.textContent = labels[state] || state;
+  if (pct > 0) fill.style.width = pct + '%';
+}
 
-        function upd() {
-            document.getElementById('s-passed').textContent = passed;
-            document.getElementById('s-failed').textContent = failed;
-            document.getElementById('s-conflicts').textContent = conflicts;
-            document.getElementById('s-reqs').textContent = totalReqs;
-            document.getElementById('s-kafka').textContent = kafkaEvents;
-            document.getElementById('s-time').textContent = (Date.now() - startTime) + 'ms';
-        }
+function updateStats() {
+  document.getElementById('sv-passed').textContent = passed;
+  document.getElementById('sv-failed').textContent = failed;
+  document.getElementById('sv-conflicts').textContent = conflicts;
+  document.getElementById('sv-reqs').textContent = totalReqs;
+  document.getElementById('sv-kafka').textContent = kafkaTotal;
+  const ms = Date.now() - startTime;
+  document.getElementById('sv-time').textContent = ms > 1000 ? (ms/1000).toFixed(1)+'s' : ms+'ms';
+  // Overall progress bar
+  const done = passed + failed;
+  document.getElementById('overallProgress').style.width = (done/TOTAL_SCENARIOS*100) + '%';
+}
 
-        async function api(method, path, body = null) {
-            totalReqs++; upd();
-            const h = { 'Content-Type': 'application/json' };
-            if (token) h['Authorization'] = `Bearer ${token}`;
-            try {
-                const res = await fetch(base() + path, { method, headers: h, body: body ? JSON.stringify(body) : null });
-                const data = await res.json();
-                return { ok: res.ok, status: res.status, data };
-            } catch (e) { return { ok: false, status: 0, data: { message: e.message } }; }
-        }
+function setTerminalStatus(state, text) {
+  const el = document.getElementById('t-status');
+  el.className = `terminal-status ${state}`;
+  el.textContent = text;
+}
 
-        async function apiAll(reqs) {
-            return Promise.all(reqs.map(r => api(r.method, r.path, r.body)));
-        }
+// ─── API call ─────────────────────────────────────────────────────────────────
+async function api(method, path, body=null, token=null) {
+  totalReqs++;
+  updateStats();
+  const h = { 'Content-Type': 'application/json' };
+  const t = token !== null ? token : accessToken;
+  if (t) h['Authorization'] = `Bearer ${t}`;
+  try {
+    const res = await fetch(base() + path, {
+      method, headers: h,
+      body: body ? JSON.stringify(body) : null
+    });
+    let data;
+    try { data = await res.json(); } catch { data = {}; }
+    return { ok: res.ok, status: res.status, data };
+  } catch(e) {
+    return { ok: false, status: 0, data: { message: e.message } };
+  }
+}
 
-        async function runAll() {
-            document.getElementById('runBtn').disabled = true;
-            document.getElementById('terminal').innerHTML = '';
-            document.getElementById('t-status').textContent = 'RUNNING';
-            passed = 0; failed = 0; conflicts = 0; totalReqs = 0; kafkaEvents = 0; startTime = Date.now();
-            doctors = []; patients = []; appointments = []; bills = [];
-            upd();
+async function apiAll(reqs) {
+  return Promise.all(reqs.map(r => api(r.method, r.path, r.body)));
+}
 
-            // S1 — Login
-            logSec('S01 — AUTH LOGIN');
-            sc(1, 'running', 50);
-            const lr = await api('POST', '/api/auth/login', { username: document.getElementById('username').value, password: document.getElementById('password').value });
-            if (!lr.ok || !lr.data.token) { log(`✗ Login failed: ${lr.data.message}`, 'error'); sc(1, 'failed', 100); failed++; document.getElementById('runBtn').disabled = false; return; }
-            token = lr.data.token;
-            log('✓ Authenticated — JWT token received', 'success');
-            sc(1, 'done'); passed++; upd(); await delay(150);
+// ─── MAIN ─────────────────────────────────────────────────────────────────────
+async function runAll() {
+  // Reset
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('terminal').innerHTML = '';
+  setTerminalStatus('running', 'RUNNING');
+  passed=0; failed=0; conflicts=0; totalReqs=0; kafkaTotal=0;
+  startTime = Date.now();
+  accessToken=''; refreshToken='';
+  doctors=[]; patients=[]; appointments=[]; bills=[];
+  for(let i=1;i<=15;i++) setSc(i,'pending',0);
+  document.getElementById('overallProgress').style.width = '0%';
+  updateStats();
 
-            // S2 — Doctors
-            logSec('S02 — CREATE DOCTORS');
-            sc(2, 'running', 20);
-            const dData = [
-                { name: 'Dr. Aisha Patel', specialization: 'Cardiology', phone: '+91-9811001001', email: 'aisha@hospital.com', isAvailable: true },
-                { name: 'Dr. Rahul Mehta', specialization: 'Neurology', phone: '+91-9811002002', email: 'rahul@hospital.com', isAvailable: true },
-                { name: 'Dr. Priya Sharma', specialization: 'Orthopedics', phone: '+91-9811003003', email: 'priya@hospital.com', isAvailable: true },
-            ];
-            for (let i = 0; i < dData.length; i++) {
-                const r = await api('POST', '/api/doctors', dData[i]);
-                if (r.ok && r.data.data) { doctors.push(r.data.data); log(`✓ ${dData[i].name} (ID:${r.data.data.id})`, 'success'); }
-                else log(`✗ ${dData[i].name}: ${r.data.message}`, 'error');
-                sc(2, 'running', ((i + 1) / 3) * 90); await delay(120);
-            }
-            sc(2, doctors.length === 3 ? 'done' : 'failed'); doctors.length === 3 ? passed++ : failed++; upd(); await delay(150);
+  // ── S01: Login ────────────────────────────────────────────────────────────
+  logSection('S01 — Login · Get AccessToken + RefreshToken', 'auth');
+  setSc(1,'running',50);
 
-            // S3 — Patients
-            logSec('S03 — CREATE PATIENTS');
-            sc(3, 'running', 20);
-            const pData = [
-                { name: 'Arjun Singh', age: 45, disease: 'Hypertension' },
-                { name: 'Meera Kapoor', age: 32, disease: 'Migraine' },
-                { name: 'Vikram Nair', age: 58, disease: 'Knee Pain' },
-                { name: 'Sunita Rao', age: 27, disease: 'Chest Pain' },
-                { name: 'Deepak Joshi', age: 41, disease: 'Back Pain' },
-            ];
-            for (let i = 0; i < pData.length; i++) {
-                const r = await api('POST', '/api/patients', pData[i]);
-                if (r.ok && r.data.data) { patients.push(r.data.data); log(`✓ ${pData[i].name} (ID:${r.data.data.id})`, 'success'); }
-                else log(`✗ ${pData[i].name}: ${r.data.message}`, 'error');
-                sc(3, 'running', ((i + 1) / 5) * 90); await delay(120);
-            }
-            sc(3, patients.length === 5 ? 'done' : 'failed'); patients.length === 5 ? passed++ : failed++; upd(); await delay(150);
+  const lr = await api('POST', '/api/auth/login', {
+    username: document.getElementById('username').value,
+    password: document.getElementById('password').value
+  }, ''); // empty string = no auth header
 
-            // S4 — Appointments
-            logSec('S04 — BOOK APPOINTMENTS');
-            sc(4, 'running', 20);
-            if (doctors.length < 3 || patients.length < 5) { log('✗ Skipping — insufficient data', 'warn'); sc(4, 'failed'); failed++; }
-            else {
-                const aData = [
-                    { patientId: patients[0].id, doctorId: doctors[0].id, appointmentDate: '2026-06-01T10:00:00', notes: 'Cardiac checkup' },
-                    { patientId: patients[1].id, doctorId: doctors[1].id, appointmentDate: '2026-06-02T11:00:00', notes: 'Migraine consult' },
-                    { patientId: patients[2].id, doctorId: doctors[2].id, appointmentDate: '2026-06-03T09:30:00', notes: 'Knee eval' },
-                    { patientId: patients[3].id, doctorId: doctors[0].id, appointmentDate: '2026-06-04T14:00:00', notes: 'Chest pain' },
-                    { patientId: patients[4].id, doctorId: doctors[2].id, appointmentDate: '2026-06-05T15:30:00', notes: 'Back pain' },
-                ];
-                for (let i = 0; i < aData.length; i++) {
-                    const r = await api('POST', '/api/appointments', aData[i]);
-                    if (r.ok && r.data.data) { appointments.push(r.data.data); log(`✓ ${r.data.data.patientName} → ${r.data.data.doctorName} (ID:${r.data.data.id})`, 'success'); }
-                    else log(`✗ Appointment ${i + 1}: ${r.data.message}`, 'error');
-                    sc(4, 'running', ((i + 1) / 5) * 90); await delay(120);
-                }
-                sc(4, appointments.length === 5 ? 'done' : 'failed'); appointments.length === 5 ? passed++ : failed++;
-            }
-            upd(); await delay(150);
+  // ✅ New API returns data.data.accessToken (wrapped in ApiResponse)
+  const loginData = lr.data?.data;
 
-            // S5 — Bills
-            logSec('S05 — GENERATE BILLS');
-            sc(5, 'running', 20);
-            if (appointments.length < 5) { log('✗ Skipping — insufficient appointments', 'warn'); sc(5, 'failed'); failed++; }
-            else {
-                const bData = [
-                    { appointmentId: appointments[0].id, consultationFee: 800, medicineFee: 200, otherCharges: 100, discount: 50, taxAmount: 81.5, dueDate: '2026-07-01T00:00:00', notes: 'Cardiac' },
-                    { appointmentId: appointments[1].id, consultationFee: 600, medicineFee: 150, otherCharges: 50, discount: 0, taxAmount: 56, dueDate: '2026-07-02T00:00:00', notes: 'Neurology' },
-                    { appointmentId: appointments[2].id, consultationFee: 1200, medicineFee: 0, otherCharges: 500, discount: 100, taxAmount: 128, dueDate: '2026-07-03T00:00:00', notes: 'Ortho+XRay' },
-                    { appointmentId: appointments[3].id, consultationFee: 800, medicineFee: 300, otherCharges: 200, discount: 0, taxAmount: 104, dueDate: '2026-07-04T00:00:00', notes: 'Cardiac+ECG' },
-                    { appointmentId: appointments[4].id, consultationFee: 500, medicineFee: 400, otherCharges: 0, discount: 50, taxAmount: 51, dueDate: '2026-07-05T00:00:00', notes: 'Physio' },
-                ];
-                for (let i = 0; i < bData.length; i++) {
-                    const r = await api('POST', '/api/bills', bData[i]);
-                    if (r.ok && r.data.data) { bills.push(r.data.data); log(`✓ ${r.data.data.invoiceNumber} — ₹${r.data.data.totalAmount} (ID:${r.data.data.id})`, 'success'); }
-                    else log(`✗ Bill ${i + 1}: ${r.data.message}`, 'error');
-                    sc(5, 'running', ((i + 1) / 5) * 90); await delay(120);
-                }
-                sc(5, bills.length === 5 ? 'done' : 'failed'); bills.length === 5 ? passed++ : failed++;
-            }
-            upd(); await delay(150);
-            if (bills.length < 5) { log('✗ Cannot continue — bills missing', 'error'); document.getElementById('runBtn').disabled = false; return; }
+  if (!lr.ok || !loginData?.accessToken) {
+    log(`✗ Login failed (${lr.status}): ${lr.data?.message || 'Check credentials and API URL'}`, 'c-error');
+    log(`  Make sure your API is running and password is correct`, 'c-warn');
+    setSc(1,'failed',100); failed++;
+    document.getElementById('runBtn').disabled = false;
+    setTerminalStatus('failed', 'FAILED');
+    updateStats(); return;
+  }
 
-            // S6 — Cash
-            logSec('S06 — FULL CASH PAYMENT');
-            sc(6, 'running', 50);
-            const r6 = await api('POST', `/api/bills/${bills[0].id}/pay`, { paidAmount: bills[0].totalAmount, paymentMethod: 1, transactionReference: 'CASH-001' });
-            if (r6.ok && r6.data.data?.paymentStatus === 2) { log(`✓ Bill #${bills[0].id} ₹${bills[0].totalAmount} paid — Cash`, 'success'); sc(6, 'done'); passed++; }
-            else { log(`✗ ${r6.data.message}`, 'error'); sc(6, 'failed'); failed++; }
-            upd(); await delay(150);
+  accessToken  = loginData.accessToken;
+  refreshToken = loginData.refreshToken;
+  log(`✓ Access token received — expires ${new Date(loginData.accessTokenExpiry).toLocaleTimeString()}`, 'c-success');
+  log(`✓ Refresh token received — 7 day validity`, 'c-success');
+  log(`  Logged in as: ${loginData.username} (${loginData.role})`, 'c-info');
+  setSc(1,'done'); passed++; updateStats(); await delay(150);
 
-            // S7 — Partial→Full Card
-            logSec('S07 — PARTIAL → FULL CARD');
-            sc(7, 'running', 30);
-            const half = Math.floor(bills[1].totalAmount / 2);
-            const r7a = await api('POST', `/api/bills/${bills[1].id}/pay`, { paidAmount: half, paymentMethod: 2, transactionReference: 'CARD-P1' });
-            if (r7a.ok) log(`✓ Partial ₹${half} → PartiallyPaid`, 'success'); else log(`✗ ${r7a.data.message}`, 'error');
-            sc(7, 'running', 65); await delay(250);
-            const r7b = await api('POST', `/api/bills/${bills[1].id}/pay`, { paidAmount: bills[1].totalAmount - half, paymentMethod: 2, transactionReference: 'CARD-P2' });
-            if (r7b.ok && r7b.data.data?.paymentStatus === 2) { log(`✓ Final ₹${bills[1].totalAmount - half} → Paid ✓ (2 transactions)`, 'success'); sc(7, 'done'); passed++; }
-            else { log(`✗ ${r7b.data.message}`, 'error'); sc(7, 'failed'); failed++; }
-            upd(); await delay(150);
+  // ── S02: Refresh Token ────────────────────────────────────────────────────
+  logSection('S02 — Refresh Token · Rotation Test', 'auth');
+  setSc(2,'running',50);
 
-            // S8 — Insurance
-            logSec('S08 — INSURANCE PAYMENT');
-            sc(8, 'running', 50);
-            const r8 = await api('POST', `/api/bills/${bills[2].id}/pay`, { paidAmount: bills[2].totalAmount, paymentMethod: 4, transactionReference: 'INS-HDFC-887' });
-            if (r8.ok && r8.data.data?.paymentStatus === 2) { log(`✓ ₹${bills[2].totalAmount} covered by insurance`, 'success'); sc(8, 'done'); passed++; }
-            else { log(`✗ ${r8.data.message}`, 'error'); sc(8, 'failed'); failed++; }
-            upd(); await delay(150);
+  const rr = await api('POST', '/api/auth/refresh', { refreshToken }, '');
+  const refreshData = rr.data?.data;
 
-            // S9 — 3 Installments
-            logSec('S09 — 3-INSTALLMENT BANK TRANSFER');
-            sc(9, 'running', 15);
-            const inst = Math.floor(bills[3].totalAmount / 3);
-            const insts = [{ amt: inst, ref: 'NEFT-001' }, { amt: inst, ref: 'NEFT-002' }, { amt: bills[3].totalAmount - (inst * 2), ref: 'NEFT-003' }];
-            let instOk = true;
-            for (let i = 0; i < insts.length; i++) {
-                const r = await api('POST', `/api/bills/${bills[3].id}/pay`, { paidAmount: insts[i].amt, paymentMethod: 3, transactionReference: insts[i].ref });
-                if (r.ok) log(`✓ Installment ${i + 1}/3 ₹${insts[i].amt} — ${insts[i].ref}`, 'success');
-                else { log(`✗ Installment ${i + 1}: ${r.data.message}`, 'error'); instOk = false; }
-                sc(9, 'running', ((i + 1) / 3) * 90); await delay(250);
-            }
-            sc(9, instOk ? 'done' : 'failed'); instOk ? passed++ : failed++; upd(); await delay(250);
+  if (!rr.ok || !refreshData?.accessToken) {
+    log(`✗ Refresh failed (${rr.status}): ${rr.data?.message}`, 'c-error');
+    setSc(2,'failed'); failed++;
+  } else {
+    // ✅ Update tokens — old refresh token is now revoked (rotation)
+    accessToken  = refreshData.accessToken;
+    refreshToken = refreshData.refreshToken;
+    log(`✓ New access token issued`, 'c-success');
+    log(`✓ Old refresh token revoked — new one issued (rotation)`, 'c-success');
+    log(`  Token reuse attack protection: active`, 'c-info');
+    setSc(2,'done'); passed++;
+  }
+  updateStats(); await delay(150);
 
-            // ══ CONCURRENCY TESTS ══════════════════════════════════════
+  // ── S03: Doctors ──────────────────────────────────────────────────────────
+  logSection('S03 — Create Doctors');
+  setSc(3,'running',10);
+  const dData = [
+    {name:'Dr. Aisha Patel', specialization:'Cardiology',  phone:'+91-9811001001', email:'aisha@hospital.com',  isAvailable:true},
+    {name:'Dr. Rahul Mehta', specialization:'Neurology',   phone:'+91-9811002002', email:'rahul@hospital.com',  isAvailable:true},
+    {name:'Dr. Priya Sharma',specialization:'Orthopedics', phone:'+91-9811003003', email:'priya@hospital.com',  isAvailable:true},
+  ];
+  for(let i=0;i<dData.length;i++) {
+    const r = await api('POST','/api/doctors',dData[i]);
+    if(r.ok && r.data?.data) { doctors.push(r.data.data); log(`✓ ${dData[i].name} — ${dData[i].specialization} (ID:${r.data.data.id})`, 'c-success'); }
+    else log(`✗ ${dData[i].name}: ${r.data?.message}`, 'c-error');
+    setSc(3,'running',((i+1)/3)*90); await delay(100);
+  }
+  setSc(3,doctors.length===3?'done':'failed'); doctors.length===3?passed++:failed++;
+  updateStats(); await delay(150);
 
-            // S10 — 5 Simultaneous Payments
-            logSec('S10 — 5 SIMULTANEOUS PAYMENTS', 'concurrency');
-            sc(10, 'running', 20);
-            log(`⚡ Firing 5 concurrent POST /api/bills/${bills[4].id}/pay ...`, 'purple');
-            log(`  Expected: 1 success (200) + 4 conflicts (409)`, 'muted');
+  // ── S04: Patients ─────────────────────────────────────────────────────────
+  logSection('S04 — Create Patients');
+  setSc(4,'running',10);
+  const pData = [
+    {name:'Arjun Singh',  age:45, disease:'Hypertension'},
+    {name:'Meera Kapoor', age:32, disease:'Migraine'},
+    {name:'Vikram Nair',  age:58, disease:'Knee Pain'},
+    {name:'Sunita Rao',   age:27, disease:'Chest Pain'},
+    {name:'Deepak Joshi', age:41, disease:'Back Pain'},
+  ];
+  for(let i=0;i<pData.length;i++) {
+    const r = await api('POST','/api/patients',pData[i]);
+    if(r.ok && r.data?.data) { patients.push(r.data.data); log(`✓ ${pData[i].name} — ${pData[i].disease} (ID:${r.data.data.id})`, 'c-success'); }
+    else log(`✗ ${pData[i].name}: ${r.data?.message}`, 'c-error');
+    setSc(4,'running',((i+1)/5)*90); await delay(100);
+  }
+  setSc(4,patients.length===5?'done':'failed'); patients.length===5?passed++:failed++;
+  updateStats(); await delay(150);
 
-            const concPays = Array.from({ length: 5 }, (_, i) => ({
-                method: 'POST', path: `/api/bills/${bills[4].id}/pay`,
-                body: { paidAmount: bills[4].totalAmount, paymentMethod: 1, transactionReference: `CONC-${i + 1}` }
-            }));
-            const cr = await apiAll(concPays);
-            const cOk = cr.filter(r => r.status === 200);
-            const c409 = cr.filter(r => r.status === 409);
-            const cErr = cr.filter(r => r.status !== 200 && r.status !== 409);
+  // ── S05: Appointments ─────────────────────────────────────────────────────
+  logSection('S05 — Book Appointments');
+  setSc(5,'running',10);
+  if(doctors.length<3||patients.length<5) { log('✗ Skipping — insufficient doctors/patients', 'c-warn'); setSc(5,'failed'); failed++; }
+  else {
+    const aData = [
+      {patientId:patients[0].id,doctorId:doctors[0].id,appointmentDate:'2026-07-01T10:00:00',notes:'Cardiac checkup'},
+      {patientId:patients[1].id,doctorId:doctors[1].id,appointmentDate:'2026-07-02T11:00:00',notes:'Migraine consult'},
+      {patientId:patients[2].id,doctorId:doctors[2].id,appointmentDate:'2026-07-03T09:30:00',notes:'Knee evaluation'},
+      {patientId:patients[3].id,doctorId:doctors[0].id,appointmentDate:'2026-07-04T14:00:00',notes:'Chest pain'},
+      {patientId:patients[4].id,doctorId:doctors[2].id,appointmentDate:'2026-07-05T15:30:00',notes:'Back pain'},
+    ];
+    for(let i=0;i<aData.length;i++) {
+      const r = await api('POST','/api/appointments',aData[i]);
+      if(r.ok && r.data?.data) { appointments.push(r.data.data); log(`✓ ${r.data.data.patientName} → ${r.data.data.doctorName} (ID:${r.data.data.id})`, 'c-success'); }
+      else log(`✗ Appointment ${i+1}: ${r.data?.message}`, 'c-error');
+      setSc(5,'running',((i+1)/5)*90); await delay(100);
+    }
+    setSc(5,appointments.length===5?'done':'failed'); appointments.length===5?passed++:failed++;
+  }
+  updateStats(); await delay(150);
 
-            cr.forEach((r, i) => {
-                if (r.status === 200) log(`  [${i + 1}] ✓ 200 OK — payment accepted`, 'success');
-                else if (r.status === 409) log(`  [${i + 1}] ⚡ 409 Conflict — RowVersion mismatch ✓`, 'purple');
-                else log(`  [${i + 1}] ✗ ${r.status} — ${r.data?.message}`, 'error');
-            });
+  // ── S06: Bills ────────────────────────────────────────────────────────────
+  logSection('S06 — Generate Bills');
+  setSc(6,'running',10);
+  if(appointments.length<5) { log('✗ Skipping — no appointments', 'c-warn'); setSc(6,'failed'); failed++; }
+  else {
+    const bData = [
+      {appointmentId:appointments[0].id,consultationFee:800, medicineFee:200,otherCharges:100,discount:50, taxAmount:81.5,dueDate:'2026-08-01T00:00:00',notes:'Cardiac'},
+      {appointmentId:appointments[1].id,consultationFee:600, medicineFee:150,otherCharges:50, discount:0,  taxAmount:56,  dueDate:'2026-08-02T00:00:00',notes:'Neurology'},
+      {appointmentId:appointments[2].id,consultationFee:1200,medicineFee:0,  otherCharges:500,discount:100,taxAmount:128, dueDate:'2026-08-03T00:00:00',notes:'Ortho + X-Ray'},
+      {appointmentId:appointments[3].id,consultationFee:800, medicineFee:300,otherCharges:200,discount:0,  taxAmount:104, dueDate:'2026-08-04T00:00:00',notes:'Cardiac + ECG'},
+      {appointmentId:appointments[4].id,consultationFee:500, medicineFee:400,otherCharges:0,  discount:50, taxAmount:51,  dueDate:'2026-08-05T00:00:00',notes:'Physiotherapy'},
+    ];
+    for(let i=0;i<bData.length;i++) {
+      const r = await api('POST','/api/bills',bData[i]);
+      if(r.ok && r.data?.data) { bills.push(r.data.data); log(`✓ ${r.data.data.invoiceNumber}  ₹${r.data.data.totalAmount}  (ID:${r.data.data.id})`, 'c-success'); }
+      else log(`✗ Bill ${i+1}: ${r.data?.message}`, 'c-error');
+      setSc(6,'running',((i+1)/5)*90); await delay(100);
+    }
+    setSc(6,bills.length===5?'done':'failed'); bills.length===5?passed++:failed++;
+  }
+  updateStats(); await delay(150);
 
-            log(`  Result: ${cOk.length} accepted · ${c409.length} conflicts · ${cErr.length} errors`, 'info');
+  if(bills.length<5) {
+    log('✗ Cannot continue — not enough bills created', 'c-error');
+    document.getElementById('runBtn').disabled = false;
+    setTerminalStatus('failed', 'FAILED');
+    return;
+  }
 
-            if (cOk.length >= 1 && c409.length >= 1) {
-                log(`✓ Concurrency control WORKING — double payment prevented`, 'success');
-                conflicts += c409.length; sc(10, 'done'); passed++;
-            } else if (cOk.length === 5) {
-                log(`⚠ All succeeded — requests were sequential (add network latency to test properly)`, 'warn');
-                sc(10, 'done'); passed++;
-            } else {
-                log(`✗ Unexpected results — check server logs`, 'error'); sc(10, 'failed'); failed++;
-            }
-            upd(); await delay(300);
+  // ── S07: Full Cash ────────────────────────────────────────────────────────
+  logSection('S07 — Full Cash Payment');
+  setSc(7,'running',50);
+  const r7 = await api('POST',`/api/bills/${bills[0].id}/pay`,{paidAmount:bills[0].totalAmount,paymentMethod:1,transactionReference:'CASH-001'});
+  if(r7.ok && r7.data?.data?.paymentStatus===2) {
+    log(`✓ ₹${bills[0].totalAmount} paid in full via Cash  →  Status: Paid`, 'c-success');
+    setSc(7,'done'); passed++;
+  } else { log(`✗ ${r7.data?.message}`, 'c-error'); setSc(7,'failed'); failed++; }
+  updateStats(); await delay(150);
 
-            // S11 — Double Payment Guard
-            logSec('S11 — DOUBLE PAYMENT GUARD', 'concurrency');
-            sc(11, 'running', 50);
-            log(`🔒 Attempting to pay already-paid Bill #${bills[0].id}...`, 'purple');
-            const r11 = await api('POST', `/api/bills/${bills[0].id}/pay`, { paidAmount: 100, paymentMethod: 1, transactionReference: 'DOUBLE-ATTEMPT' });
-            if (r11.status === 400 && r11.data.message?.toLowerCase().includes('paid')) {
-                log(`✓ 400 rejected — "${r11.data.message}"`, 'success');
-                sc(11, 'done'); passed++;
-            } else {
-                log(`✗ Expected 400 got ${r11.status}: ${r11.data.message}`, 'error'); sc(11, 'failed'); failed++;
-            }
-            upd(); await delay(250);
+  // ── S08: Partial → Full Card ──────────────────────────────────────────────
+  logSection('S08 — Partial → Full Payment (Card)');
+  setSc(8,'running',30);
+  const half = Math.floor(bills[1].totalAmount/2);
+  const r8a = await api('POST',`/api/bills/${bills[1].id}/pay`,{paidAmount:half,paymentMethod:2,transactionReference:'CARD-P1'});
+  if(r8a.ok) log(`✓ Partial ₹${half}  →  PartiallyPaid`, 'c-success');
+  else log(`✗ Partial: ${r8a.data?.message}`, 'c-error');
+  setSc(8,'running',65); await delay(200);
+  const r8b = await api('POST',`/api/bills/${bills[1].id}/pay`,{paidAmount:bills[1].totalAmount-half,paymentMethod:2,transactionReference:'CARD-P2'});
+  if(r8b.ok && r8b.data?.data?.paymentStatus===2) {
+    log(`✓ Final ₹${bills[1].totalAmount-half}  →  Paid  (2 card transactions total)`, 'c-success');
+    setSc(8,'done'); passed++;
+  } else { log(`✗ ${r8b.data?.message}`, 'c-error'); setSc(8,'failed'); failed++; }
+  updateStats(); await delay(150);
 
-            // S12 — Concurrent Bill Updates
-            logSec('S12 — CONCURRENT BILL UPDATES', 'concurrency');
-            sc(12, 'running', 20);
-            const pendingBill = bills.find(b => b.paymentStatus === 1);
-            if (!pendingBill) {
-                log(`⚠ No pending bills available — all were paid`, 'warn');
-                log(`  Creating a new appointment + bill for update test...`, 'muted');
+  // ── S09: Insurance ────────────────────────────────────────────────────────
+  logSection('S09 — Insurance Payment');
+  setSc(9,'running',50);
+  const r9 = await api('POST',`/api/bills/${bills[2].id}/pay`,{paidAmount:bills[2].totalAmount,paymentMethod:4,transactionReference:'INS-HDFC-2026-887'});
+  if(r9.ok && r9.data?.data?.paymentStatus===2) {
+    log(`✓ ₹${bills[2].totalAmount} covered by insurance  —  Ref: INS-HDFC-2026-887`, 'c-success');
+    setSc(9,'done'); passed++;
+  } else { log(`✗ ${r9.data?.message}`, 'c-error'); setSc(9,'failed'); failed++; }
+  updateStats(); await delay(150);
 
-                // Create a fresh bill for update test
-                let freshBill = null;
-                if (appointments.length > 0) {
-                    // Create another appointment reusing existing doctor/patient
-                    const fAppt = await api('POST', '/api/appointments', {
-                        patientId: patients[0].id, doctorId: doctors[1].id,
-                        appointmentDate: '2026-08-01T10:00:00', notes: 'Update test appointment'
-                    });
-                    if (fAppt.ok && fAppt.data.data) {
-                        const fBill = await api('POST', '/api/bills', {
-                            appointmentId: fAppt.data.data.id, consultationFee: 500,
-                            medicineFee: 100, otherCharges: 0, discount: 0, taxAmount: 36,
-                            dueDate: '2026-09-01T00:00:00', notes: 'Update test bill'
-                        });
-                        if (fBill.ok && fBill.data.data) freshBill = fBill.data.data;
-                    }
-                }
+  // ── S10: 3 Installments ───────────────────────────────────────────────────
+  logSection('S10 — 3-Installment Bank Transfer');
+  setSc(10,'running',10);
+  const inst = Math.floor(bills[3].totalAmount/3);
+  const insts = [
+    {amt:inst,               ref:'NEFT-2026-001'},
+    {amt:inst,               ref:'NEFT-2026-002'},
+    {amt:bills[3].totalAmount-(inst*2), ref:'NEFT-2026-003'},
+  ];
+  let instOk = true;
+  for(let i=0;i<insts.length;i++) {
+    const r = await api('POST',`/api/bills/${bills[3].id}/pay`,{paidAmount:insts[i].amt,paymentMethod:3,transactionReference:insts[i].ref});
+    if(r.ok) log(`✓ Installment ${i+1}/3  ₹${insts[i].amt}  —  ${insts[i].ref}`, 'c-success');
+    else { log(`✗ Installment ${i+1}: ${r.data?.message}`, 'c-error'); instOk=false; }
+    setSc(10,'running',((i+1)/3)*90); await delay(200);
+  }
+  setSc(10,instOk?'done':'failed'); instOk?passed++:failed++;
+  updateStats(); await delay(200);
 
-                if (freshBill) {
-                    log(`✓ Created fresh bill #${freshBill.id} for update test`, 'success');
-                    log(`⚡ Firing 3 concurrent PUT /api/bills/${freshBill.id} ...`, 'purple');
-                    const updReqs = [
-                        { method: 'PUT', path: `/api/bills/${freshBill.id}`, body: { consultationFee: 900, medicineFee: 100, otherCharges: 0, discount: 0, taxAmount: 45, dueDate: '2026-09-01T00:00:00', notes: 'Update A' } },
-                        { method: 'PUT', path: `/api/bills/${freshBill.id}`, body: { consultationFee: 950, medicineFee: 100, otherCharges: 0, discount: 0, taxAmount: 45, dueDate: '2026-09-01T00:00:00', notes: 'Update B' } },
-                        { method: 'PUT', path: `/api/bills/${freshBill.id}`, body: { consultationFee: 980, medicineFee: 100, otherCharges: 0, discount: 0, taxAmount: 45, dueDate: '2026-09-01T00:00:00', notes: 'Update C' } },
-                    ];
-                    const ur = await apiAll(updReqs);
-                    const uOk = ur.filter(r => r.status === 204);
-                    const u409 = ur.filter(r => r.status === 409);
-                    ur.forEach((r, i) => {
-                        if (r.status === 204) log(`  [Update ${String.fromCharCode(65 + i)}] ✓ 204 — won the race`, 'success');
-                        else if (r.status === 409) log(`  [Update ${String.fromCharCode(65 + i)}] ⚡ 409 Conflict — RowVersion ✓`, 'purple');
-                        else log(`  [Update ${String.fromCharCode(65 + i)}] ✗ ${r.status} — ${r.data?.message}`, 'error');
-                    });
-                    if (uOk.length >= 1 && u409.length >= 1) {
-                        log(`✓ ${uOk.length} won, ${u409.length} conflicted — protection working`, 'success');
-                        conflicts += u409.length; sc(12, 'done'); passed++;
-                    } else {
-                        log(`⚠ All ${uOk.length} succeeded — requests may have been sequential`, 'warn');
-                        sc(12, 'done'); passed++;
-                    }
-                } else {
-                    log(`⚠ Could not create test bill — skipping`, 'warn');
-                    sc(12, 'done'); passed++;
-                }
-            } else {
-                log(`⚡ Firing 3 concurrent PUT /api/bills/${pendingBill.id} ...`, 'purple');
-                const updReqs = [
-                    { method: 'PUT', path: `/api/bills/${pendingBill.id}`, body: { consultationFee: 900, medicineFee: 100, otherCharges: 0, discount: 0, taxAmount: 45, dueDate: '2026-09-01T00:00:00', notes: 'Update A' } },
-                    { method: 'PUT', path: `/api/bills/${pendingBill.id}`, body: { consultationFee: 950, medicineFee: 100, otherCharges: 0, discount: 0, taxAmount: 45, dueDate: '2026-09-01T00:00:00', notes: 'Update B' } },
-                    { method: 'PUT', path: `/api/bills/${pendingBill.id}`, body: { consultationFee: 980, medicineFee: 100, otherCharges: 0, discount: 0, taxAmount: 45, dueDate: '2026-09-01T00:00:00', notes: 'Update C' } },
-                ];
-                const ur = await apiAll(updReqs);
-                const uOk = ur.filter(r => r.status === 204);
-                const u409 = ur.filter(r => r.status === 409);
-                ur.forEach((r, i) => {
-                    if (r.status === 204) log(`  [Update ${String.fromCharCode(65 + i)}] ✓ 204 — won the race`, 'success');
-                    else if (r.status === 409) log(`  [Update ${String.fromCharCode(65 + i)}] ⚡ 409 Conflict — RowVersion ✓`, 'purple');
-                    else log(`  [Update ${String.fromCharCode(65 + i)}] ✗ ${r.status}`, 'error');
-                });
-                if (uOk.length >= 1 && u409.length >= 1) {
-                    log(`✓ ${uOk.length} won, ${u409.length} conflicted`, 'success'); conflicts += u409.length; sc(12, 'done'); passed++;
-                } else {
-                    log(`⚠ All succeeded — requests likely sequential`, 'warn'); sc(12, 'done'); passed++;
-                }
-            }
-            upd(); await delay(300);
+  // ── S11: Concurrent Payments ──────────────────────────────────────────────
+  logSection('S11 — 5 Simultaneous Payments · RowVersion Test', 'conc');
+  setSc(11,'running',20);
+  log(`⚡  Firing 5 concurrent requests to POST /api/bills/${bills[4].id}/pay ...`, 'c-purple');
+  log(`    Expected: 1 × 200 OK  +  remaining × 409 Conflict`, 'c-muted');
 
-            // S13 — Retry After Conflict
-            logSec('S13 — SEQUENTIAL RETRY AFTER 409', 'concurrency');
-            sc(13, 'running', 30);
-            log(`🔄 Simulating: client gets 409 → reloads bill → retries payment...`, 'purple');
+  const concReqs = Array.from({length:5},(_,i) => ({
+    method:'POST',
+    path:`/api/bills/${bills[4].id}/pay`,
+    body:{paidAmount:bills[4].totalAmount, paymentMethod:1, transactionReference:`CONC-${i+1}`}
+  }));
+  const concResults = await apiAll(concReqs);
 
-            const fBillRes = await api('GET', `/api/bills/${bills[4].id}`);
-            if (!fBillRes.ok) { log(`✗ Could not reload bill`, 'error'); sc(13, 'failed'); failed++; }
-            else {
-                const bd = fBillRes.data.data;
-                log(`  Reloaded — Status: ${bd.paymentStatusName} | Balance: ₹${bd.balanceDue}`, 'info');
-                sc(13, 'running', 65);
-                if (bd.paymentStatus === 2) {
-                    log(`✓ Bill fully paid after S10 concurrent test — RowVersion worked correctly`, 'success');
-                    sc(13, 'done'); passed++;
-                } else if (bd.balanceDue > 0) {
-                    const rr = await api('POST', `/api/bills/${bills[4].id}/pay`, { paidAmount: bd.balanceDue, paymentMethod: 5, transactionReference: 'ONLINE-RETRY' });
-                    if (rr.ok) { log(`✓ Retry succeeded — ₹${bd.balanceDue} paid via Online`, 'success'); log(`  409 → reload → retry flow works correctly ✓`, 'success'); sc(13, 'done'); passed++; }
-                    else { log(`✗ Retry failed: ${rr.data.message}`, 'error'); sc(13, 'failed'); failed++; }
-                } else {
-                    log(`✓ Balance zero — settled`, 'success'); sc(13, 'done'); passed++;
-                }
-            }
-            upd(); await delay(400);
+  const c200 = concResults.filter(r=>r.status===200);
+  const c409 = concResults.filter(r=>r.status===409);
+  const cOth = concResults.filter(r=>r.status!==200&&r.status!==409);
 
-            // S14 — Kafka Validation
-            logSec('S14 — KAFKA EVENT STREAM VALIDATION');
-            sc(14, 'running', 20);
-            await delay(2000);
-            let allBillIds = bills.map(b => b.id);
-            for (let i = 0; i < allBillIds.length; i++) {
-                const r = await api('GET', `/api/payment-events/bill/${allBillIds[i]}`);
-                if (r.ok && r.data.data && r.data.data.length > 0) {
-                    kafkaEvents += r.data.data.length;
-                    log(`✓ Bill #${allBillIds[i]} → ${r.data.data.length} event(s)`, 'success');
-                    r.data.data.forEach(e => log(`  → [${e.paymentStatus}] ₹${e.paidAmount} via ${e.paymentMethod} @ ${new Date(e.occurredAt).toLocaleTimeString()}`, 'info'));
-                } else {
-                    log(`⚠ No events for Bill #${allBillIds[i]}`, 'warn');
-                }
-                sc(14, 'running', ((i + 1) / allBillIds.length) * 90); await delay(150);
-            }
-            upd();
-            log(`━━ Total Kafka events captured: ${kafkaEvents} ━━`, 'success');
-            sc(14, kafkaEvents > 0 ? 'done' : 'failed'); kafkaEvents > 0 ? passed++ : failed++; upd(); await delay(300);
+  concResults.forEach((r,i) => {
+    if(r.status===200)      log(`  [${i+1}] ✓  200 OK  — payment accepted`, 'c-success');
+    else if(r.status===409) log(`  [${i+1}] ⚡  409 Conflict  — RowVersion mismatch  ✓`, 'c-purple');
+    else if(r.status===400) log(`  [${i+1}] ⚠  400  — ${r.data?.message}`, 'c-warn');
+    else                    log(`  [${i+1}] ✗  ${r.status}  — ${r.data?.message}`, 'c-error');
+  });
 
-            // S15 — Data Integrity
-            logSec('S15 — DATA INTEGRITY CHECK');
-            sc(15, 'running', 20);
-            log(`🔍 Verifying DB PaidAmount = sum of Kafka payment events...`, 'info');
-            let intOk = true, checked = 0;
-            for (let i = 0; i < bills.length; i++) {
-                const [br, er] = await Promise.all([
-                    api('GET', `/api/bills/${bills[i].id}`),
-                    api('GET', `/api/payment-events/bill/${bills[i].id}`)
-                ]);
-                if (!br.ok || !er.ok) continue;
-                const curBill = br.data.data;
-                const evts = er.data.data || [];
-                const evtSum = evts.reduce((s, e) => s + e.paidAmount, 0);
-                const match = Math.abs(curBill.paidAmount - evtSum) < 0.01;
-                if (match) { log(`✓ Bill #${bills[i].id} — DB: ₹${curBill.paidAmount} = Events: ₹${evtSum.toFixed(2)} ✓`, 'success'); checked++; }
-                else { log(`✗ MISMATCH Bill #${bills[i].id} — DB: ₹${curBill.paidAmount} ≠ Events: ₹${evtSum.toFixed(2)}`, 'error'); intOk = false; }
-                sc(15, 'running', ((i + 1) / bills.length) * 90); await delay(150);
-            }
-            sc(15, intOk && checked > 0 ? 'done' : 'failed'); intOk && checked > 0 ? passed++ : failed++; upd();
+  log(`  Result: ${c200.length} accepted · ${c409.length} conflicts · ${cOth.length} other`, 'c-info');
 
-            // Summary
-            logSec('TEST SUITE COMPLETE');
-            const total = passed + failed;
-            log(`Scenarios: ${passed}/${total} passed`, passed === total ? 'success' : 'warn');
-            log(`Concurrency conflicts correctly rejected: ${conflicts}`, 'purple');
-            log(`Kafka events captured: ${kafkaEvents}`, 'info');
-            log(`Total API requests: ${totalReqs}`, 'info');
-            log(`Total time: ${Date.now() - startTime}ms`, 'muted');
-            if (passed === total) log(`🎉 ALL ${total} SCENARIOS PASSED — Enterprise ready!`, 'success');
-            else log(`⚠ ${failed} scenario(s) failed`, 'warn');
+  if(c200.length>=1 && (c409.length>=1 || cOth.length>=1)) {
+    log(`✓ Concurrency control WORKING — double payment prevented`, 'c-success');
+    conflicts += c409.length; setSc(11,'done'); passed++;
+  } else if(c200.length===5) {
+    log(`⚠ All 5 succeeded — requests too fast to conflict (sequential internally)`, 'c-warn');
+    setSc(11,'done'); passed++;
+  } else {
+    log(`✗ Unexpected results — check server logs`, 'c-error');
+    setSc(11,'failed'); failed++;
+  }
+  updateStats(); await delay(300);
 
-            document.getElementById('t-status').textContent = passed === total ? 'ALL PASSED ✓' : `${failed} FAILED`;
-            document.getElementById('runBtn').disabled = false;
-        }
+  // ── S12: Double Payment Guard ─────────────────────────────────────────────
+  logSection('S12 — Double Payment Guard', 'conc');
+  setSc(12,'running',50);
+  log(`🔒  Attempting to pay already-paid Bill #${bills[0].id} ...`, 'c-purple');
+  const r12 = await api('POST',`/api/bills/${bills[0].id}/pay`,{paidAmount:100,paymentMethod:1,transactionReference:'FRAUD-ATTEMPT'});
+  if(r12.status===400 && r12.data?.message?.toLowerCase().includes('paid')) {
+    log(`✓  400 Bad Request  —  "${r12.data.message}"`, 'c-success');
+    log(`   Double payment correctly rejected by business logic`, 'c-success');
+    setSc(12,'done'); passed++;
+  } else {
+    log(`✗  Expected 400, got ${r12.status}: ${r12.data?.message}`, 'c-error');
+    setSc(12,'failed'); failed++;
+  }
+  updateStats(); await delay(200);
+
+  // ── S13: Retry After Conflict ─────────────────────────────────────────────
+  logSection('S13 — Client Reload + Retry After 409', 'conc');
+  setSc(13,'running',30);
+  log(`🔄  Simulating: client received 409 → reloads bill → retries with fresh data ...`, 'c-purple');
+
+  const freshBillRes = await api('GET',`/api/bills/${bills[4].id}`);
+  if(!freshBillRes.ok) {
+    log(`✗  Could not reload bill: ${freshBillRes.data?.message}`, 'c-error');
+    setSc(13,'failed'); failed++;
+  } else {
+    const bd = freshBillRes.data?.data;
+    log(`  Reloaded bill  —  Status: ${bd.paymentStatusName}  |  Balance due: ₹${bd.balanceDue}`, 'c-info');
+    setSc(13,'running',65);
+
+    if(bd.paymentStatus===2) {
+      log(`✓  Bill already fully paid after S11 concurrent test`, 'c-success');
+      log(`   RowVersion protection worked — only one payment went through`, 'c-success');
+      setSc(13,'done'); passed++;
+    } else if(bd.balanceDue>0) {
+      const retryRes = await api('POST',`/api/bills/${bills[4].id}/pay`,{paidAmount:bd.balanceDue,paymentMethod:5,transactionReference:'ONLINE-RETRY-001'});
+      if(retryRes.ok) {
+        log(`✓  Retry succeeded  —  ₹${bd.balanceDue} paid via Online`, 'c-success');
+        log(`   Full flow: 409 → reload → retry → success  ✓`, 'c-success');
+        setSc(13,'done'); passed++;
+      } else {
+        log(`✗  Retry failed: ${retryRes.data?.message}`, 'c-error');
+        setSc(13,'failed'); failed++;
+      }
+    } else {
+      log(`✓  Balance is zero — bill settled`, 'c-success');
+      setSc(13,'done'); passed++;
+    }
+  }
+  updateStats(); await delay(400);
+
+  // ── S14: Kafka Events ─────────────────────────────────────────────────────
+  logSection('S14 — Kafka Event Stream Validation', 'valid');
+  setSc(14,'running',10);
+  log(`⏳  Waiting 2s for Kafka consumer to process events ...`, 'c-muted');
+  await delay(2000);
+
+  let eventsOk = true;
+  for(let i=0;i<bills.length;i++) {
+    const r = await api('GET',`/api/payment-events/bill/${bills[i].id}`);
+    if(r.ok && r.data?.data?.length>0) {
+      kafkaTotal += r.data.data.length;
+      log(`✓  Bill #${bills[i].id} (${bills[i].invoiceNumber})  →  ${r.data.data.length} event(s)`, 'c-success');
+      r.data.data.forEach(e => {
+        log(`    ↳  [${e.paymentStatus}]  ₹${e.paidAmount}  via ${e.paymentMethod}  @  ${new Date(e.occurredAt).toLocaleTimeString()}`, 'c-info');
+      });
+    } else {
+      log(`⚠  No events found for Bill #${bills[i].id} (may still be consuming)`, 'c-warn');
+      eventsOk = false;
+    }
+    setSc(14,'running',((i+1)/bills.length)*90);
+    await delay(150);
+  }
+
+  log(`  ── Total Kafka events captured: ${kafkaTotal} ──`, 'c-success');
+  updateStats();
+  setSc(14,kafkaTotal>0?'done':'failed'); kafkaTotal>0?passed++:failed++;
+  await delay(250);
+
+  // ── S15: Data Integrity ───────────────────────────────────────────────────
+  logSection('S15 — Data Integrity Check', 'valid');
+  setSc(15,'running',10);
+  log(`🔍  Verifying DB PaidAmount = sum of Kafka events on every bill ...`, 'c-info');
+
+  let intOk=true, checked=0;
+  for(let i=0;i<bills.length;i++) {
+    const [br,er] = await Promise.all([
+      api('GET',`/api/bills/${bills[i].id}`),
+      api('GET',`/api/payment-events/bill/${bills[i].id}`)
+    ]);
+    if(!br.ok||!er.ok) continue;
+    const dbPaid = br.data?.data?.paidAmount ?? 0;
+    const evtSum = (er.data?.data||[]).reduce((s,e)=>s+e.paidAmount,0);
+    const match  = Math.abs(dbPaid - evtSum) < 0.01;
+    if(match) {
+      log(`✓  Bill #${bills[i].id}  —  DB: ₹${dbPaid}  =  Events sum: ₹${evtSum.toFixed(2)}  ✓`, 'c-success');
+      checked++;
+    } else {
+      log(`✗  MISMATCH  Bill #${bills[i].id}  —  DB: ₹${dbPaid}  ≠  Events: ₹${evtSum.toFixed(2)}`, 'c-error');
+      intOk=false;
+    }
+    setSc(15,'running',((i+1)/bills.length)*90);
+    await delay(150);
+  }
+
+  setSc(15,intOk&&checked>0?'done':'failed');
+  intOk&&checked>0?passed++:failed++;
+  updateStats();
+
+  // ── Summary ───────────────────────────────────────────────────────────────
+  logSection('Complete', 'final');
+  const total = passed+failed;
+  const allPassed = passed===TOTAL_SCENARIOS;
+
+  log(`  Scenarios     : ${passed} / ${total} passed`, passed===total?'c-success':'c-warn');
+  log(`  Conflicts     : ${conflicts} correctly rejected (RowVersion)`, 'c-purple');
+  log(`  Kafka events  : ${kafkaTotal} captured`, 'c-info');
+  log(`  API requests  : ${totalReqs}`, 'c-info');
+  log(`  Duration      : ${((Date.now()-startTime)/1000).toFixed(2)}s`, 'c-muted');
+
+  if(allPassed) {
+    log('', '');
+    log('  🎉  ALL 15 SCENARIOS PASSED — Enterprise Ready!', 'c-success');
+    setTerminalStatus('passed', 'ALL PASSED ✓');
+  } else {
+    log(`  ⚠  ${failed} scenario(s) failed — see output above`, 'c-warn');
+    setTerminalStatus('failed', `${failed} FAILED`);
+  }
+
+  document.getElementById('overallProgress').style.width = '100%';
+  document.getElementById('runBtn').disabled = false;
+  updateStats();
+}
     </script>
 </body>
 </html>

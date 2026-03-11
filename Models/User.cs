@@ -19,5 +19,6 @@
         public ICollection<Appointment> CreatedAppointments { get; set; } = new List<Appointment>();
         public ICollection<Bill> CreatedBills { get; set; } = new List<Bill>();
         public ICollection<Bill> UpdatedBills { get; set; } = new List<Bill>();
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     }
 }

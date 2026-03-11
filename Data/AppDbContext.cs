@@ -11,6 +11,7 @@ namespace HospitalApi.Data
         public DbSet<Appointment> Appointments { get; set; } = null!;
         public DbSet<Bill> Bills { get; set; } = null!;
         public DbSet<PaymentEvent> PaymentEvents { get; set; } = null!;
+        public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
 
@@ -94,6 +95,13 @@ namespace HospitalApi.Data
                 .WithMany(u => u.UpdatedBills)
                 .HasForeignKey(b => b.UpdatedByUserId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            // RefreshToken → User (cascade delete — tokens removed when user deleted)
+            modelBuilder.Entity<RefreshToken>()
+                .HasOne(r => r.User)
+                .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -3,6 +3,7 @@ using HospitalApi.Helpers;
 using HospitalApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace HospitalApi.Controllers
@@ -98,7 +99,8 @@ namespace HospitalApi.Controllers
             return NoContent();
         }
 
-        // POST api/bills/5/pay
+        // ✅ FIX: stricter rate limit on payment — 10 req/min per IP
+        [EnableRateLimiting("payment")]
         [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpPost("{id:int}/pay")]
         public async Task<IActionResult> Pay(int id, BillPayDto dto)
@@ -109,7 +111,7 @@ namespace HospitalApi.Controllers
 
             var (success, error, conflict) = await _service.PayAsync(id, dto, userId);
 
-            // FIX: 409 Conflict returned when two requests try to pay same bill simultaneously
+            // ✅ FIX: 409 Conflict returned when two requests try to pay same bill simultaneously
             if (conflict)
                 return Conflict(new ApiResponse<object> { Success = false, Message = error ?? "Payment conflict detected." });
 

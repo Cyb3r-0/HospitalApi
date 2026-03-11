@@ -1,6 +1,6 @@
 # 🏥 HospitalApi
 
-A production-ready **ASP.NET Core 8** REST API for hospital management, featuring JWT authentication, role-based access control, Redis caching, and a clean layered architecture.
+A production-ready **ASP.NET Core 8** REST API for hospital management, featuring JWT authentication, role-based access control, Redis caching, Kafka event streaming, concurrency control, and rate limiting.
 
 ---
 
@@ -12,10 +12,13 @@ A production-ready **ASP.NET Core 8** REST API for hospital management, featurin
 | Database | SQL Server + Entity Framework Core 8 |
 | Caching | Redis (StackExchange.Redis) |
 | Authentication | JWT Bearer Tokens |
+| Password Hashing | BCrypt.Net (work factor 12) |
+| Message Queue | Apache Kafka (Confluent) |
 | Validation | FluentValidation 11 |
 | Mapping | AutoMapper 12 |
 | Logging | Serilog (Console + File) |
 | Docs | Swagger / OpenAPI |
+| Containers | Docker + Docker Compose |
 
 ---
 
@@ -23,17 +26,22 @@ A production-ready **ASP.NET Core 8** REST API for hospital management, featurin
 
 ```
 HospitalApi/
-├── Controllers/        # API endpoints (Auth, Patients)
+├── Controllers/        # API endpoints
 ├── Services/           # Business logic layer
 ├── Repositories/       # Data access layer
 ├── Models/             # EF Core entity models
-├── Dtos/               # Request / response data transfer objects
+├── Dtos/               # Request / response DTOs
 ├── Validators/         # FluentValidation rules
 ├── Mapping/            # AutoMapper profiles
 ├── Middlewares/        # Global exception handler
+├── Kafka/              # Producer + Consumer
+├── Events/             # Kafka event models
 ├── Helpers/            # ApiResponse, PagedResult, PasswordHasher
 ├── Data/               # AppDbContext
 └── Migrations/         # EF Core migrations
+
+HospitalApi.Tools/
+└── seeder.html         # Enterprise test suite (15 scenarios)
 ```
 
 ---
@@ -43,8 +51,8 @@ HospitalApi/
 ### Prerequisites
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop)
 - SQL Server (LocalDB or full)
-- Redis (local or [Docker](#running-redis-with-docker))
 
 ### 1. Clone the repo
 
@@ -53,7 +61,15 @@ git clone https://github.com/your-username/HospitalApi.git
 cd HospitalApi
 ```
 
-### 2. Configure `appsettings.json`
+### 2. Start infrastructure
+
+```bash
+docker compose up -d
+```
+
+Starts Redis, ZooKeeper, Kafka, and Kafka UI automatically.
+
+### 3. Configure `appsettings.json`
 
 ```json
 {
@@ -65,47 +81,36 @@ cd HospitalApi
     "Issuer": "HospitalApi",
     "Audience": "HospitalApiUsers",
     "DurationInMinutes": 60
+  },
+  "Kafka": {
+    "BootstrapServers": "localhost:9092"
   }
 }
 ```
 
 > ⚠️ Never commit real secrets. Use [user secrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets) or environment variables in production.
 
-### 3. Apply database migrations
+### 4. Apply migrations and run
 
 ```bash
 dotnet ef database update
-```
-
-### 4. Run the API
-
-```bash
 dotnet run
 ```
 
-Swagger UI will be available at: `https://localhost:{port}/swagger`
-
----
-
-### Running Redis with Docker
-
-If you don't have Redis installed locally, spin it up with Docker:
-
-```bash
-docker run -d -p 6379:6379 --name redis redis:alpine
-```
+Swagger UI: `https://localhost:{port}/swagger`  
+Kafka UI: `http://localhost:8080`
 
 ---
 
 ## 🔐 Authentication & Roles
 
-The API uses **JWT Bearer tokens**. Three roles are supported:
+JWT Bearer tokens with BCrypt password hashing (work factor 12).
 
 | Role | Permissions |
 |---|---|
-| `SuperAdmin` | Full access — including register users & delete patients |
-| `Admin` | Read & write patients |
-| `Doctor` | Read & write patients |
+| `SuperAdmin` | Full access — register users, delete records |
+| `Admin` | Read & write all modules |
+| `Doctor` | Read & write patients and appointments |
 
 ### Login
 
@@ -125,45 +130,59 @@ Returns a JWT token. Pass it in all subsequent requests:
 Authorization: Bearer <your_token>
 ```
 
-### Register a new user *(SuperAdmin only)*
-
-```http
-POST /api/auth/register
-Authorization: Bearer <superadmin_token>
-
-{
-  "username": "dr.smith",
-  "password": "SecurePass123",
-  "roleId": 3
-}
-```
-
 ---
 
 ## 📋 API Endpoints
 
+### Auth
+| Method | Endpoint | Rate Limit | Description |
+|---|---|---|---|
+| `POST` | `/api/auth/login` | 5/min | Login and get JWT token |
+| `POST` | `/api/auth/register` | — | Register user (SuperAdmin only) |
+
 ### Patients
-
-| Method | Endpoint | Role Required | Description |
+| Method | Endpoint | Role | Description |
 |---|---|---|---|
-| `GET` | `/api/patients` | Any auth | Get all patients (paginated) |
-| `GET` | `/api/patients/{id}` | Any auth | Get patient by ID |
-| `POST` | `/api/patients` | Any auth | Create a patient |
-| `PUT` | `/api/patients/{id}` | Any auth | Update a patient |
-| `DELETE` | `/api/patients/{id}` | SuperAdmin | Delete a patient |
+| `GET` | `/api/patients` | Any auth | Get all (paginated, filter by disease) |
+| `GET` | `/api/patients/{id}` | Any auth | Get by ID |
+| `POST` | `/api/patients` | Any auth | Create |
+| `PUT` | `/api/patients/{id}` | Any auth | Update |
+| `DELETE` | `/api/patients/{id}` | SuperAdmin | Delete |
 
-### Query Parameters for `GET /api/patients`
-
-| Param | Type | Default | Description |
+### Doctors
+| Method | Endpoint | Role | Description |
 |---|---|---|---|
-| `page` | int | 1 | Page number |
-| `pageSize` | int | 10 | Items per page (max 50) |
-| `disease` | string | — | Filter by disease name |
+| `GET` | `/api/doctors` | Any auth | Get all (filter by specialization, availability) |
+| `GET` | `/api/doctors/{id}` | Any auth | Get by ID |
+| `POST` | `/api/doctors` | SuperAdmin, Admin | Create |
+| `PUT` | `/api/doctors/{id}` | SuperAdmin, Admin | Update |
+| `DELETE` | `/api/doctors/{id}` | SuperAdmin | Delete |
 
-**Example:**
-```http
-GET /api/patients?page=1&pageSize=10&disease=diabetes
-```
+### Appointments
+| Method | Endpoint | Role | Description |
+|---|---|---|---|
+| `GET` | `/api/appointments` | Any auth | Get all (filter by doctor, patient, status, date) |
+| `GET` | `/api/appointments/{id}` | Any auth | Get by ID |
+| `POST` | `/api/appointments` | Any auth | Book appointment |
+| `PUT` | `/api/appointments/{id}` | Any auth | Update status |
+| `DELETE` | `/api/appointments/{id}` | SuperAdmin | Soft delete |
+
+### Bills
+| Method | Endpoint | Role | Rate Limit | Description |
+|---|---|---|---|---|
+| `GET` | `/api/bills` | Any auth | — | Get all (filter by patient, doctor, status) |
+| `GET` | `/api/bills/{id}` | Any auth | — | Get by ID with balance due |
+| `POST` | `/api/bills` | SuperAdmin, Admin | — | Create bill (auto-calculates total) |
+| `PUT` | `/api/bills/{id}` | SuperAdmin, Admin | — | Update fees/notes |
+| `POST` | `/api/bills/{id}/pay` | SuperAdmin, Admin | 10/min | Record payment (supports partial) |
+| `DELETE` | `/api/bills/{id}` | SuperAdmin | — | Soft delete |
+
+### Payment Events (Kafka Stream)
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/payment-events` | Full event stream (filter by bill, patient, doctor) |
+| `GET` | `/api/payment-events/bill/{id}` | Complete payment history for a bill |
+| `GET` | `/api/payment-events/patient/{id}` | All payments by a specific patient |
 
 ---
 
@@ -179,90 +198,88 @@ All endpoints return a consistent wrapper:
 }
 ```
 
-Paginated responses include:
-
-```json
-{
-  "success": true,
-  "message": "Patients fetched successfully",
-  "data": {
-    "items": [...],
-    "totalCount": 100,
-    "page": 1,
-    "pageSize": 10,
-    "totalPages": 10
-  }
-}
-```
-
 ---
 
-## ⚡ Caching Strategy
+## ⚡ Caching
 
-Redis is used to cache frequently read data:
+Redis distributed cache with graceful fallback — if Redis is unavailable the API continues serving from the database without crashing.
 
 | Cache Key | TTL | Invalidated On |
 |---|---|---|
-| `patient_{id}` | 5 minutes | Update or Delete |
-| `patients_page{n}_size{n}_disease_{x}` | 2 minutes | Automatic expiry |
+| `patient_{id}` | 5 min | Update or Delete |
+| `doctor_{id}` | 5 min | Update or Delete |
+| `appointment_{id}` | 5 min | Update or Delete |
+| `bill_{id}` | 5 min | Update, Pay, Delete |
+| List queries | 2 min | Automatic expiry |
 
 ---
 
-## 📝 Logging
+## 🔒 Concurrency Control
 
-Serilog writes structured logs to:
-- **Console** — for local development
-- **`Logs/log-{date}.txt`** — rolling daily log file
+Bills use EF Core `[Timestamp]` RowVersion for optimistic concurrency. Two simultaneous payment requests on the same bill results in `409 Conflict` for the second request, preventing double payment.
 
-Log level is configured in `appsettings.json` under the `Serilog` section.
+---
+
+## 🚦 Rate Limiting
+
+ASP.NET Core built-in rate limiter — no extra packages needed.
+
+| Policy | Limit | Applied To |
+|---|---|---|
+| `global` | 100 req/min per IP | All endpoints |
+| `login` | 5 req/min per IP | `POST /api/auth/login` |
+| `payment` | 10 req/min per IP | `POST /api/bills/{id}/pay` |
+
+Exceeding limits returns `429 Too Many Requests`.
+
+---
+
+## 📨 Kafka Event Streaming
+
+Every payment publishes a `PaymentMade` event to the `payment-events` topic. A background `IHostedService` consumer saves events to `PaymentEvents` table — giving you a complete, immutable audit trail even for partial/installment payments.
+
+```
+POST /api/bills/{id}/pay
+  → Saves to DB
+  → Publishes to Kafka
+  → Consumer persists event
+  → GET /api/payment-events/bill/{id} shows full history
+```
+
+Duplicate events are rejected by `EventId` (GUID) idempotency check.  
+View events live: `http://localhost:8080`
 
 ---
 
 ## 🛡️ Error Handling
 
-A global `ExceptionMiddleware` catches all unhandled exceptions and returns a consistent JSON error response:
-
-```json
-{
-  "statusCode": 404,
-  "message": "Resource not found"
-}
-```
-
-Exception-to-status-code mapping:
-
-| Exception | Status Code |
-|---|---|
-| `ArgumentException` | 400 Bad Request |
-| `KeyNotFoundException` | 404 Not Found |
-| Any other | 500 Internal Server Error |
-
-In `DEBUG` builds, the stack trace is also included in the response.
+Global `ExceptionMiddleware` returns consistent JSON for all errors. Stack trace included in `DEBUG` builds only.
 
 ---
 
 ## 🗺️ Roadmap
 
-- [x] JWT Authentication + RBAC
-- [x] Patient CRUD with pagination
-- [x] Redis distributed caching
+- [x] JWT Authentication + BCrypt hashing
+- [x] Role-based access control
+- [x] Patient, Doctor, Appointment, Billing modules
+- [x] Redis distributed caching with fallback
+- [x] Kafka payment event streaming
+- [x] Concurrency control (RowVersion / optimistic locking)
+- [x] Rate limiting (global + per-endpoint)
+- [x] Soft deletes with audit trail
 - [x] FluentValidation + AutoMapper
 - [x] Serilog structured logging
-- [x] Global exception middleware
-- [x] Doctors & Appointments modules
-- [x] Billing module
-- [ ] BCrypt password hashing
-- [ ] Rate limiting
+- [x] Docker + Docker Compose with persistent volumes
 - [ ] API versioning
 - [ ] Unit & integration tests
-- [ ] Docker + Docker Compose
 - [ ] CI/CD with GitHub Actions
+- [ ] Cloud deployment
 
 ---
 
-## 🤝 Contributing
+## 🧪 Testing
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+Open `HospitalApi.Tools/seeder.html` in Chrome. Enter credentials and click **Run** to execute 15 scenarios: auth, all CRUD modules, 4 payment modes, concurrency race conditions, Kafka validation, and data integrity checks.
 
 ---
 

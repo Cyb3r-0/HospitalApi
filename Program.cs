@@ -7,10 +7,12 @@ using HospitalApi.Middlewares;
 using HospitalApi.Repositories;
 using HospitalApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
+using System.Threading.RateLimiting;
 
 namespace HospitalApi
 {
@@ -30,7 +32,38 @@ namespace HospitalApi
 
             builder.Host.UseSerilog();
 
-            // Add services to the container.
+            // Rate Limiting — ASP.NET Core built-in (no extra package needed)
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = 429; // Too Many Requests
+
+                // Global policy — 100 requests per minute per IP
+                options.AddFixedWindowLimiter("global", config =>
+                {
+                    config.PermitLimit = 100;
+                    config.Window = TimeSpan.FromMinutes(1);
+                    config.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    config.QueueLimit = 5;
+                });
+
+                // Login policy — 5 attempts per minute per IP (brute force protection)
+                options.AddFixedWindowLimiter("login", config =>
+                {
+                    config.PermitLimit = 5;
+                    config.Window = TimeSpan.FromMinutes(1);
+                    config.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    config.QueueLimit = 0;
+                });
+
+                // Payment policy — 10 requests per minute per IP
+                options.AddFixedWindowLimiter("payment", config =>
+                {
+                    config.PermitLimit = 10;
+                    config.Window = TimeSpan.FromMinutes(1);
+                    config.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    config.QueueLimit = 2;
+                });
+            });
 
             builder.Services.AddControllers();
 
@@ -74,7 +107,7 @@ namespace HospitalApi
                 options.InstanceName = "HospitalApi_";
             });
 
-            // scan the entire executing assembly — picks up ALL profiles automatically (PatientProfile, DoctorProfile, etc.)
+            // Scan the entire executing assembly — picks up ALL profiles automatically (PatientProfile, DoctorProfile, etc.)
             builder.Services.AddAutoMapper(typeof(Program).Assembly);
             builder.Services.AddScoped<IPatientRepository, PatientRepository>();
             builder.Services.AddScoped<IPatientService, PatientService>();
@@ -129,9 +162,10 @@ namespace HospitalApi
             }
             app.UseMiddleware<ExceptionMiddleware>();
             app.UseCors("AllowAll");
+            app.UseRateLimiter();
             app.UseAuthentication();
             app.UseAuthorization();
-            app.MapControllers();
+            app.MapControllers().RequireRateLimiting("global");
             app.Run();
         }
     }

@@ -4,6 +4,7 @@ using FluentValidation.AspNetCore;
 using HospitalApi.Data;
 using HospitalApi.Mapping;
 using HospitalApi.Middlewares;
+using HospitalApi.Repositories;
 using HospitalApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -73,9 +74,20 @@ namespace HospitalApi
                 options.InstanceName = "HospitalApi_";
             });
 
-            builder.Services.AddAutoMapper(typeof(PatientProfile).Assembly);
+            // scan the entire executing assembly — picks up ALL profiles automatically (PatientProfile, DoctorProfile, etc.)
+            builder.Services.AddAutoMapper(typeof(Program).Assembly);
             builder.Services.AddScoped<IPatientRepository, PatientRepository>();
             builder.Services.AddScoped<IPatientService, PatientService>();
+            builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
+            builder.Services.AddScoped<IDoctorService, DoctorService>();
+            builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+            builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+            builder.Services.AddScoped<IBillRepository, BillRepository>();
+            builder.Services.AddScoped<IBillService, BillService>();
+
+            // Kafka — producer is singleton (one connection), consumer is a background worker
+            builder.Services.AddSingleton<HospitalApi.Kafka.IKafkaProducerService, HospitalApi.Kafka.KafkaProducerService>();
+            builder.Services.AddHostedService<HospitalApi.Kafka.KafkaPaymentConsumer>();
 
             builder.Services.AddCors(options =>
             {

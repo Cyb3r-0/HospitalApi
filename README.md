@@ -251,11 +251,11 @@ In `DEBUG` builds, the stack trace is also included in the response.
 - [x] Global exception middleware
 - [x] Doctors & Appointments modules
 - [x] Billing module
-- [ ] BCrypt password hashing
-- [ ] Rate limiting
+- [x] BCrypt password hashing
+- [x] Rate limiting
 - [ ] API versioning
-- [ ] Unit & integration tests
-- [ ] Docker + Docker Compose
+- [x] Unit & integration tests
+- [x] Docker + Docker Compose
 - [ ] CI/CD with GitHub Actions
 
 ---
